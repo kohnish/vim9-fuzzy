@@ -1,0 +1,20 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ifndef ENV_H
+#define ENV_H
+
+#cmakedefine BUILD_TEST
+#ifdef BUILD_TEST
+#define PROJECT_SOURCE_DIR "@PROJECT_SOURCE_DIR@"
+#define PROJECT_BINARY_DIR "@PROJECT_BINARY_DIR@"
+#define FIXTURE_DIR PROJECT_SOURCE_DIR "/native/app/test/fixtures/"
+#define VOLATILE_DIR PROJECT_SOURCE_DIR "/native/app/test/volatile/"
+#define MRU_PATH VOLATILE_DIR "mru"
+#endif
+
+
+#endif //ENV_H
+#ifdef __cplusplus
+}
+#endif
