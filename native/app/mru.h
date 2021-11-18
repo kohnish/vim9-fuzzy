@@ -1,0 +1,22 @@
+#ifndef MRU_H
+#define MRU_H
+
+#include <uv.h>
+// Only For GoogleTest
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int init_mru(const char *mru_path);
+void deinit_mru();
+int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path);
+int write_mru(const char *mru_path, const char *path);
+int is_mru_search_ongoing();
+void init_mru_mutex();
+void deinit_mru_mutex();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // MRU_H
