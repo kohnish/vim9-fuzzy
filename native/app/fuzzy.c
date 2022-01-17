@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INITIAL_RES_NUM 500
 #define MAX_FUZZY_MATCHES 256
 #define FALSE 0
 #define TRUE 1
@@ -290,17 +291,18 @@ void toggle_cancel(int val) {
 size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
     size_t matched_len = 0;
     static char word[MAX_VIM_INPUT];
-    static file_info_t file_res[MAX_RESPONSE_LINES + 1];
-    memset(file_res, 0, sizeof(file_info_t) * MAX_RESPONSE_LINES);
     memset(word, 0, MAX_VIM_INPUT);
-    int last_score = 0;
+
+    size_t current_sz = INITIAL_RES_NUM;
+    file_info_t *file_res = malloc(sizeof(file_info_t) * INITIAL_RES_NUM);
 
     sanitize_word(search_keyword, word);
 
     for (size_t i = 0; i < len; i++) {
         if (cancel == 1) {
             toggle_cancel(0);
-            return 0;
+            free(file_res);
+            return -1;
         }
         search_result_t search_result = {.matches = {0}, .score = 0};
 
@@ -316,27 +318,19 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
 
         fuzzy_match(&query);
         if (query.result.score > 0) {
-            if (matched_len < MAX_RESPONSE_LINES) {
-                file_res[matched_len].file_path = files[i].file_path;
-                file_res[matched_len].fuzzy_score = query.result.score;
-                file_res[matched_len].f_len = files[i].f_len;
-                if (matched_len == MAX_RESPONSE_LINES - 1) {
-                    qsort(file_res, matched_len, sizeof(file_info_t), result_compare);
-                    last_score = file_res[matched_len].fuzzy_score;
-                }
-                ++matched_len;
-            } else {
-                if (last_score < query.result.score) {
-                    last_score = query.result.score;
-                    file_res[MAX_RESPONSE_LINES].file_path = files[i].file_path;
-                    file_res[MAX_RESPONSE_LINES].fuzzy_score = query.result.score;
-                    file_res[MAX_RESPONSE_LINES].f_len = files[i].f_len;
-                }
+            if (matched_len >= current_sz) {
+                current_sz = current_sz * 2;
+                file_res = realloc(file_res, sizeof(file_info_t) * current_sz);
             }
+            file_res[matched_len].file_path = files[i].file_path;
+            file_res[matched_len].fuzzy_score = query.result.score;
+            file_res[matched_len].f_len = files[i].f_len;
+            ++matched_len;
         }
     }
     qsort(file_res, matched_len, sizeof(file_info_t), result_compare);
     send_res_from_file_info(cmd, file_res, matched_len);
 
+    free(file_res);
     return matched_len;
 }
