@@ -1,7 +1,3 @@
-if !has('vim9script')
-    finish
-endif
-
 vim9script
 
 import "./window_handler.vim" as window_handler

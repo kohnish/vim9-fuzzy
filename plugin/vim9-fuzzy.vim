@@ -1,16 +1,3 @@
-if !has('vim9script')
-
-function! s:main()
-    echomsg "[vim9-fuzzy]: Unsupported vim version"
-endfunction
-
-command! -nargs=0 Vim9FuzzyFile call s:main()
-command! -nargs=0 Vim9FuzzyMru call s:main()
-
-
-    finish
-endif
-
 vim9script
 
 import "./job_handler.vim" as job_handler
