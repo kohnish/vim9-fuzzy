@@ -1,7 +1,3 @@
-if !has('vim9script')
-    finish
-endif
-
 vim9script
 
 import "./job_handler.vim" as job_handler
