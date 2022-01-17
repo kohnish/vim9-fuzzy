@@ -6,8 +6,7 @@
 #include <uv.h>
 
 #define MAX_VIM_INPUT 65536
-#define MAX_RESPONSE_LINES 500
-#define MAX_RESPONSE_SIZE (MAX_RESPONSE_LINES * PATH_MAX)
+#define MAX_RESPONSE_LINES 100
 #define MAX_CMD 32
 
 typedef void (*res_cb_t)(void *userdata);
