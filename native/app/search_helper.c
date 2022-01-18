@@ -58,7 +58,7 @@ void deinit_file() {
     }
 }
 
-static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t initial_sz, file_info_t **file_info, FILE *fp) {
+static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t initial_sz, file_info_t **file_info, FILE *fp, char no_path_trim) {
     size_t counter = 0;
     while (1) {
         if (counter >= initial_sz) {
@@ -74,14 +74,18 @@ static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t ini
         // Remove newline character.
         path_buf[strlen(path_buf) - 1] = '\0';
         (*file_info)[counter].file_path = str(str_pool, path_buf);
-        (*file_info)[counter].file_name = get_file_name(path_buf, str_pool);
+        if (no_path_trim == 1) {
+            (*file_info)[counter].file_name = (*file_info)[counter].file_path;
+        } else {
+            (*file_info)[counter].file_name = get_file_name(path_buf, str_pool);
+        }
         (*file_info)[counter].f_len = strlen((*file_info)[counter].file_name);
         counter++;
     }
     return counter;
 }
 
-void init_file(const char *list_cmd) {
+static void init_file(const char *cmd, const char *list_cmd) {
     if (g_f_cache_len > 0) {
         deinit_file();
     }
@@ -94,7 +98,12 @@ void init_file(const char *list_cmd) {
         return;
     }
     memset(g_f_cache, 0, sizeof(file_info_t) * current_size);
-    size_t loaded_sz = load_lines_from_fp_to_file_info(&g_str_pool, INITIAL_CACHE_SIZE, &g_f_cache, fp);
+    size_t loaded_sz;
+    if (strcmp(cmd, "init_path") == 0) {
+        loaded_sz = load_lines_from_fp_to_file_info(&g_str_pool, INITIAL_CACHE_SIZE, &g_f_cache, fp, 1);
+    } else {
+        loaded_sz = load_lines_from_fp_to_file_info(&g_str_pool, INITIAL_CACHE_SIZE, &g_f_cache, fp, 0);
+    }
     pclose(fp);
     g_f_cache_len = loaded_sz;
 
@@ -111,14 +120,14 @@ static void after_fuzzy_file_search(uv_work_t *req, int status) {
 static void fuzzy_file_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
-        init_file(search_data->list_cmd);
+        init_file(search_data->cmd, search_data->list_cmd);
     } else {
         start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len);
     }
     toggle_file_init(0);
 }
 
-int queue_search(uv_loop_t *loop, const char *value, const char *list_cmd) {
+int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd) {
     toggle_file_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
@@ -126,6 +135,7 @@ int queue_search(uv_loop_t *loop, const char *value, const char *list_cmd) {
     search_data->value[strlen(value) + 1] = '\0';
     search_data->file_info_len = g_f_cache_len;
     search_data->file_info = g_f_cache;
+    strcpy(search_data->cmd, cmd);
     strcpy(search_data->list_cmd, list_cmd);
     req->data = search_data;
     int ret = uv_queue_work(loop, req, fuzzy_file_search, after_fuzzy_file_search);

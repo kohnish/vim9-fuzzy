@@ -20,10 +20,9 @@ typedef struct file_info_t {
     int mru_score;
 } __attribute__((aligned(ALIGN32))) file_info_t;
 
-void init_file(const char *list_cmd);
 void deinit_file();
 const char *get_file_name(const char *path, str_pool_t ***pool);
-int queue_search(uv_loop_t *loop, const char *value, const char *list_cmd);
+int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd);
 int is_file_search_ongoing();
 void init_file_mutex();
 void deinit_file_mutex();

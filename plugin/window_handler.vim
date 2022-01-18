@@ -2,8 +2,10 @@ vim9script
 
 import "./job_handler.vim" as job_handler
 
+# ToDo: stop using globals
 g:search_window_name = ""
 g:root_dir = ""
+g:list_cmd = ""
 g:current_line = ""
 g:mru_path = ""
 g:script_dir = expand('<stack>:p:h')
@@ -70,6 +72,13 @@ def InitWindow(mode: string): void
         g:root_dir = getcwd()
     endif
 
+    var git_dir = g:root_dir .. "/.git"
+    if filereadable(git_dir) || isdirectory(git_dir)
+        g:list_cmd = "git ls-files " .. g:root_dir .. " --full-name"
+    else
+        g:list_cmd = "rg --files --hidden --max-depth 5"
+    endif
+
     if exists('g:vim9_fuzzy_mru_path')
         g:mru_path = g:vim9_fuzzy_mru_path
     else
@@ -77,7 +86,9 @@ def InitWindow(mode: string): void
     endif
 
     if mode == "file"
-        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": g:root_dir})
+        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": g:root_dir, "list_cmd": g:list_cmd})
+    elseif mode == "path"
+        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": g:root_dir, "list_cmd": g:list_cmd})
     elseif mode == "mru"
         job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": g:mru_path})
     endif
@@ -96,7 +107,15 @@ enddef
 def SendCharMsg(mode: string, msg: string): void
     if mode == "file"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_file", "root_dir": g:root_dir}
+            var msg2send = {"cmd": "init_file", "root_dir": g:root_dir, "list_cmd": g:list_cmd}
+            job_handler.WriteToChannel(msg2send)
+        else
+            var msg2send = {"cmd": "file", "value": msg, "root_dir": g:root_dir, "mru_path": g:mru_path}
+            job_handler.WriteToChannel(msg2send)
+        endif
+    elseif mode == "path"
+        if len(msg) == 0
+            var msg2send = {"cmd": "init_path", "root_dir": g:root_dir, "list_cmd": g:list_cmd}
             job_handler.WriteToChannel(msg2send)
         else
             var msg2send = {"cmd": "file", "value": msg, "root_dir": g:root_dir, "mru_path": g:mru_path}

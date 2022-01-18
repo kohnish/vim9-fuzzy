@@ -31,7 +31,7 @@ Usage
 -----
 Installation:
 ```sh
-mkdir -p ~/.vim/pack/git-plugins/start
+mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 cd ~/.vim/pack/plugins/opt/vim9-fuzzy
 # Not available yet (See Build section)
@@ -54,7 +54,11 @@ let vim9_fuzzy_proj_dir=proj_dir
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/git-plugins/start/vim9-fuzzy/mru"
 
 # Vim9-fuzzy Keymap(No default)
+# Search by only file name.
 nmap <C-f> :Vim9FuzzyFile<CR>
+# Search by full path. (Slow with the current algorithm)
+nmap <C-j> :Vim9FuzzyPath<CR>
+# Search in last opened files via vim9-fuzzy.
 nmap <C-l> :Vim9FuzzyMru<CR>
 ```
 
