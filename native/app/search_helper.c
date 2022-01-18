@@ -58,7 +58,7 @@ void deinit_file() {
     }
 }
 
-size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t initial_sz, file_info_t **file_info, FILE *fp) {
+static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t initial_sz, file_info_t **file_info, FILE *fp) {
     size_t counter = 0;
     while (1) {
         if (counter >= initial_sz) {
@@ -81,7 +81,7 @@ size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t initial_sz
     return counter;
 }
 
-void init_file(char *root_dir) {
+void init_file(const char *list_cmd) {
     if (g_f_cache_len > 0) {
         deinit_file();
     }
@@ -89,28 +89,13 @@ void init_file(char *root_dir) {
     g_f_cache = malloc(sizeof(file_info_t) * current_size);
     g_str_pool = init_str_pool(1024);
 
-    char cmdline[255] = {0};
-    sprintf(cmdline, "git ls-files %s --full-name", root_dir);
-    FILE *fp = popen(cmdline, "r");
+    FILE *fp = popen(list_cmd, "r");
     if (fp == NULL) {
         return;
     }
     memset(g_f_cache, 0, sizeof(file_info_t) * current_size);
     size_t loaded_sz = load_lines_from_fp_to_file_info(&g_str_pool, INITIAL_CACHE_SIZE, &g_f_cache, fp);
     pclose(fp);
-
-    // fallback when it's not git dir
-    if (loaded_sz == 0) {
-        memset(cmdline, 0, 255);
-        sprintf(cmdline, "rg --files --hidden --max-depth 5");
-        fp = popen(cmdline, "r");
-        if (fp == NULL) {
-            return;
-        }
-        memset(g_f_cache, 0, sizeof(file_info_t) * current_size);
-        loaded_sz = load_lines_from_fp_to_file_info(&g_str_pool, INITIAL_CACHE_SIZE, &g_f_cache, fp);
-        pclose(fp);
-    }
     g_f_cache_len = loaded_sz;
 
     send_res_from_file_info("file", g_f_cache, g_f_cache_len);
@@ -126,14 +111,14 @@ static void after_fuzzy_file_search(uv_work_t *req, int status) {
 static void fuzzy_file_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
-        init_file(search_data->root_dir);
+        init_file(search_data->list_cmd);
     } else {
         start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len);
     }
     toggle_file_init(0);
 }
 
-int queue_search(uv_loop_t *loop, const char *value, const char *root_dir) {
+int queue_search(uv_loop_t *loop, const char *value, const char *list_cmd) {
     toggle_file_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
@@ -141,7 +126,7 @@ int queue_search(uv_loop_t *loop, const char *value, const char *root_dir) {
     search_data->value[strlen(value) + 1] = '\0';
     search_data->file_info_len = g_f_cache_len;
     search_data->file_info = g_f_cache;
-    strcpy(search_data->root_dir, root_dir);
+    strcpy(search_data->list_cmd, list_cmd);
     req->data = search_data;
     int ret = uv_queue_work(loop, req, fuzzy_file_search, after_fuzzy_file_search);
     if (ret != 0) {

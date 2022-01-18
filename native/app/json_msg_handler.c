@@ -84,7 +84,7 @@ int handle_json_msg(uv_loop_t *loop, const char *json_str) {
     char cmd[MAX_JSON_ELM_SIZE] = {0};
     char value[MAX_JSON_ELM_SIZE] = {0};
     char mru_path[PATH_MAX] = {0};
-    char root_dir[PATH_MAX] = {0};
+    char list_cmd[PATH_MAX] = {0};
     jsmn_parse(&j_parser, json_str, strlen(json_str) + 1, j_tokens, sizeof(j_tokens) / sizeof(j_tokens[0]));
     // easy parsing. No depth guarantee.
     for (int i = 0; i < MAX_JSON_TOKENS; i++) {
@@ -100,18 +100,22 @@ int handle_json_msg(uv_loop_t *loop, const char *json_str) {
             jsmntok_t *next_tok = &j_tokens[i + 1];
             strncpy(mru_path, json_str + next_tok->start, next_tok->end - next_tok->start);
             i++;
-        } else if (json_eq(json_str, &j_tokens[i], "root_dir") == 0) {
+        } else if (json_eq(json_str, &j_tokens[i], "list_cmd") == 0) {
             jsmntok_t *next_tok = &j_tokens[i + 1];
-            strncpy(root_dir, json_str + next_tok->start, next_tok->end - next_tok->start);
+            strncpy(list_cmd, json_str + next_tok->start, next_tok->end - next_tok->start);
             i++;
         }
     }
 
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0) {
-        return queue_search(loop, "", root_dir);
+        return queue_search(loop, "", cmd, list_cmd);
     } else if (strcmp(cmd, "file") == 0) {
-        return queue_search(loop, value, root_dir);
+        return queue_search(loop, value, cmd, "");
+    } else if (strcmp(cmd, "init_path") == 0) {
+        return queue_search(loop, "", cmd, list_cmd);
+    } else if (strcmp(cmd, "path") == 0) {
+        return queue_search(loop, value, cmd, "");
     } else if (strcmp(cmd, "init_mru") == 0) {
         return queue_mru_search(loop, "", mru_path);
     } else if (strcmp(cmd, "write_mru") == 0) {

@@ -11,7 +11,7 @@ extern "C" {
 typedef struct search_data_t {
     char cmd[32];
     char value[255];
-    char root_dir[PATH_MAX];
+    char list_cmd[255];
     char mru_path[PATH_MAX];
     file_info_t *file_info;
     size_t file_info_len;
