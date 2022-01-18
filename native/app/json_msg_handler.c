@@ -108,14 +108,8 @@ int handle_json_msg(uv_loop_t *loop, const char *json_str) {
     }
 
     // No safety here as well, vimscript must set it correctly
-    if (strcmp(cmd, "init_file") == 0) {
-        return queue_search(loop, "", cmd, list_cmd);
-    } else if (strcmp(cmd, "file") == 0) {
-        return queue_search(loop, value, cmd, "");
-    } else if (strcmp(cmd, "init_path") == 0) {
-        return queue_search(loop, "", cmd, list_cmd);
-    } else if (strcmp(cmd, "path") == 0) {
-        return queue_search(loop, value, cmd, "");
+    if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
+        return queue_search(loop, cmd, value, list_cmd);
     } else if (strcmp(cmd, "init_mru") == 0) {
         return queue_mru_search(loop, "", mru_path);
     } else if (strcmp(cmd, "write_mru") == 0) {

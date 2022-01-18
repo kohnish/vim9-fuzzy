@@ -26,4 +26,5 @@ else
     call Main()
     command! -nargs=0 Vim9FuzzyFile call StartWindow("file")
     command! -nargs=0 Vim9FuzzyMru call StartWindow("mru")
+    command! -nargs=0 Vim9FuzzyPath call StartWindow("path")
 endif
