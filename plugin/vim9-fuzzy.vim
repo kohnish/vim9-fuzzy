@@ -23,8 +23,8 @@ enddef
 if exists('g:vim9_fuzzy_disabled') && g:vim9_fuzzy_disabled
     finish
 else
-    call Main()
-    command! -nargs=0 Vim9FuzzyFile call StartWindow("file")
-    command! -nargs=0 Vim9FuzzyMru call StartWindow("mru")
-    command! -nargs=0 Vim9FuzzyPath call StartWindow("path")
+    Main()
+    command! -nargs=0 Vim9FuzzyFile StartWindow("file")
+    command! -nargs=0 Vim9FuzzyMru StartWindow("mru")
+    command! -nargs=0 Vim9FuzzyPath StartWindow("path")
 endif
