@@ -4,8 +4,6 @@ Vim9-fuzzy
 A vim plugin for finding files with approximate string matching.
 No vim language binding dependencies, use job-start API to avoid blocking vim
 
-Still work-in-progress...
-
 ToDo
 ----
  - Improve fuzzy algorithm
@@ -35,29 +33,28 @@ mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 cd ~/.vim/pack/plugins/opt/vim9-fuzzy
 # Not available yet (See Build section)
-url https://github.com/kohnish/vim9-fuzzy/releases/linux-vim9-fuzzy -o vim9-fuzzy
+curl https://github.com/kohnish/vim9-fuzzy/releases/linux-vim9-fuzzy -o vim9-fuzzy
 ```
 Configuration
 ```vim
 # Enable vim9-fuzzy
 packadd vim9-fuzzy
 # Root path to search from (No default yet)
-let git_root=system("git rev-parse --show-toplevel | tr -d '\n'")
+var proj_dir = getcwd()
+var git_root = system("git rev-parse --show-toplevel | tr -d '\n'")
 if len(git_root) > 0
-    let proj_dir = git_root
-else
-    let proj_dir = getcwd()
+    proj_dir = git_root
 endif
-let vim9_fuzzy_proj_dir=proj_dir
+g:vim9_fuzzy_proj_dir = proj_dir
 
 # Path for keeping most recently used files.(Default)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/git-plugins/start/vim9-fuzzy/mru"
 
-# Vim9-fuzzy Keymap(No default)
+# Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
 nmap <C-f> :Vim9FuzzyFile<CR>
-# Search by full path. (Slow with the current algorithm)
-nmap <C-j> :Vim9FuzzyPath<CR>
+# Search by full path
+nmap <C-y> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 nmap <C-l> :Vim9FuzzyMru<CR>
 ```
