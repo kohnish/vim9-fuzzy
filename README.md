@@ -52,11 +52,11 @@ g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/git-plugins/start/vim9-fuzzy/mru"
 
 # Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
-nmap <C-f> :Vim9FuzzyFile<CR>
+noremap <C-f> :Vim9FuzzyFile<CR>
 # Search by full path
-nmap <C-y> :Vim9FuzzyPath<CR>
+noremap <C-y> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
-nmap <C-l> :Vim9FuzzyMru<CR>
+noremap <C-l> :Vim9FuzzyMru<CR>
 ```
 
 Build requirements
