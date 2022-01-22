@@ -12,9 +12,9 @@ if(${USE_SYSTEM_GOOGLETEST})
     set_target_properties(gmock PROPERTIES IMPORTED_LOCATION ${pkgcfg_lib_GMOCK_gmock})
 else()
     ExternalProject_Add(googletest
-        URL https://github.com/google/googletest/archive/refs/tags/release-1.10.0.tar.gz
+        URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz
         DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/cache/googletest
-        URL_HASH SHA256=9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb
+        URL_HASH SHA256=b4870bf121ff7795ba20d20bcdd8627b8e088f2d1dab299a031c1034eddc93d5
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR} -DCMAKE_INSTALL_LIBDIR=${PROJECT_BINARY_DIR}/lib
     )
     add_library(gtest STATIC IMPORTED GLOBAL)

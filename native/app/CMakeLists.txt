@@ -90,7 +90,7 @@ if(${BUILD_TEST})
     target_compile_options(${test_executable_name} PRIVATE 
         ${compile_opt}
     )
-    target_include_directories(${test_executable_name} PUBLIC
+    target_include_directories(${test_executable_name} SYSTEM PRIVATE
         ${inc}
     )
     target_link_libraries(${test_executable_name}
