@@ -27,9 +27,14 @@ export def StartFinderProcess(): void
         "out_mode": "raw",
         "in_mode": "json",
     }
-    var executable = fnamemodify(resolve(expand('<stack>:p')), ':h') .. "/../bin/vim9-fuzzy"
-    if has("win64") || has("win32") || has("win16")
-        executable = executable .. ".exe"
+    var executable = ""
+    if !exists('g:vim9_fuzzy_exe_path')
+        executable = fnamemodify(resolve(expand('<stack>:p')), ':h') .. "/../bin/vim9-fuzzy"
+        if has("win64") || has("win32") || has("win16")
+            executable = executable .. ".exe"
+        endif
+    else
+        executable = g:vim9_fuzzy_exe_path
     endif
     g:job = job_start([executable], job_opt)
     g:channel = job_getchannel(g:job)
