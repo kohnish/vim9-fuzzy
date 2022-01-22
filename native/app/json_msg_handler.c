@@ -29,16 +29,9 @@ static int create_res_json(const char *cmd, file_info_t *file_info, size_t size,
         return 0;
     }
     int json_size = sprintf(buf, "{\"cmd\": \"%s\", \"result\": [", cmd);
-    size_t i = 0;
-    for (i = 0; i < size; i++) {
-        // ToDo: Fix getting nulled
-        if (file_info[i].f_len != 0) {
-            int add_size = sprintf(&buf[json_size], "\"%s\",", file_info[i].file_path);
-            json_size += add_size;
-        }
-    }
-    if (i == 0) {
-        return 0;
+    for (size_t i = 0; i < size; i++) {
+        int add_size = sprintf(&buf[json_size], "\"%s\",", file_info[i].file_path);
+        json_size += add_size;
     }
     sprintf(&buf[json_size - 1], "]}\n");
     return json_size;
