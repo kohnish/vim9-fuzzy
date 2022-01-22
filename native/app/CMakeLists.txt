@@ -44,7 +44,6 @@ set(compile_opt
     -Werror
     -Wcast-align
     -Werror=vla
-    -fno-math-errno
     )
 
 target_compile_options(${proj_name} PRIVATE 
