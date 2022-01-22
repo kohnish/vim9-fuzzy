@@ -1,6 +1,5 @@
 #include "json_msg_handler.h"
 #include "fuzzy.h"
-#include "list.h"
 #include "mru.h"
 #include "search_helper.h"
 #include <ctype.h>

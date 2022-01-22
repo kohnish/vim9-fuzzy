@@ -13,6 +13,7 @@ option(BUILD_TEST "Build test binary" OFF)
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release")
     message("[INFO] CMAKE_BUILD_TYPE not set, setting to Release")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -fomit-frame-pointer -flto")
 endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")

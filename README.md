@@ -39,6 +39,7 @@ Configuration
 ```vim
 # Enable vim9-fuzzy
 packadd vim9-fuzzy
+
 # Root path to search from (No default yet)
 var proj_dir = getcwd()
 var git_root = system("git rev-parse --show-toplevel | tr -d '\n'")
@@ -48,7 +49,7 @@ endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
 # Path for keeping most recently used files.(Default)
-g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/git-plugins/start/vim9-fuzzy/mru"
+g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
 # Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
@@ -78,8 +79,9 @@ make install/strip
 
 Build (dynamic build(Fedora))
 ```shell
-sudo dnf install libuv-devel
+mkdir build
 cd build
+sudo dnf install -y libuv-devel
 cmake ..
 make -j`nproc`
 make install/strip

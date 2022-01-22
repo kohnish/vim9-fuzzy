@@ -7,8 +7,6 @@ set(src
     fuzzy.c
     mru.c
     str_pool.c
-    #list.c
-    #logger.c
     )
 
 set(lib
@@ -46,10 +44,7 @@ set(compile_opt
     -Werror
     -Wcast-align
     -Werror=vla
-    #-Wno-unused-parameter
-    #-Wno-unused-variable
-    #-Wno-unused-function
-    #-Wno-unused-value
+    -fno-math-errno
     )
 
 target_compile_options(${proj_name} PRIVATE 
