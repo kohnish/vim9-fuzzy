@@ -138,28 +138,43 @@ typedef struct search_state_t {
     int idx;
 } search_state_t;
 
-static int fuzzy_match_recursive(const char *fuzpat, const char *str, int strIdx, int *outScore, const char *strBegin, int strLen, int *srcMatches, int *matches, int maxMatches, int nextMatch, int *recursionCount) {
+
+// clang-format off
+static int fuzzy_match_recursive(
+        const char *search_word,
+        const char *line,
+        int str_idx,
+        int *out_score,
+        const char *whole_word,
+        int strLen,
+        int *src_matches,
+        int *matches,
+        int max_matches,
+        int next_match,
+        int *recursion_count) {
+// clang-format on
     int recursiveMatch = FALSE;
     int bestRecursiveMatches[MAX_FUZZY_MATCHES];
     int bestRecursiveScore = 0;
     int first_match;
     int matched;
 
-    ++*recursionCount;
-    if (*recursionCount >= FUZZY_MATCH_RECURSION_LIMIT) {
+    ++*recursion_count;
+    if (*recursion_count >= FUZZY_MATCH_RECURSION_LIMIT) {
         return 0;
     }
+
 
     first_match = TRUE;
     size_t pat_counter = 0;
     size_t str_counter = 0;
 
-    while (str_counter < strlen(str) && pat_counter < strlen(fuzpat)) {
+    while (str_counter < strlen(line) && pat_counter < strlen(search_word)) {
         int c1;
         int c2;
 
-        c1 = tolower(fuzpat[pat_counter]);
-        c2 = tolower(str[str_counter]);
+        c1 = tolower(search_word[pat_counter]);
+        c2 = tolower(line[str_counter]);
 
         // Found match
         if (c1 == c2) {
@@ -167,18 +182,34 @@ static int fuzzy_match_recursive(const char *fuzpat, const char *str, int strIdx
             int recursiveScore = 0;
 
             // Supplied matches buffer was too short
-            if (nextMatch >= maxMatches) {
+            if (next_match >= max_matches) {
                 return 0;
             }
 
             // "Copy-on-Write" srcMatches into matches
-            if (first_match && srcMatches) {
-                memcpy(matches, srcMatches, nextMatch * sizeof(srcMatches[0]));
+            if (first_match && src_matches) {
+                memcpy(matches, src_matches, next_match * sizeof(src_matches[0]));
                 first_match = FALSE;
             }
 
-            const char *next_char = str + 1;
-            if (fuzzy_match_recursive(fuzpat, next_char, strIdx + 1, &recursiveScore, strBegin, strLen, matches, recursiveMatches, ARRAY_LENGTH(recursiveMatches), nextMatch, recursionCount)) {
+            const char *next_char = line + 1;
+
+// clang-format off
+            if (fuzzy_match_recursive(
+                        search_word,
+                        next_char,
+                        str_idx + 1,
+                        &recursiveScore,
+                        whole_word,
+                        strLen,
+                        matches,
+                        recursiveMatches,
+                        ARRAY_LENGTH(recursiveMatches),
+                        next_match,
+                        recursion_count
+                        )
+            ) {
+// clang-format on
                 if (!recursiveMatch || recursiveScore > bestRecursiveScore) {
                     memcpy(bestRecursiveMatches, recursiveMatches, MAX_FUZZY_MATCHES * sizeof(recursiveMatches[0]));
                     bestRecursiveScore = recursiveScore;
@@ -187,30 +218,30 @@ static int fuzzy_match_recursive(const char *fuzpat, const char *str, int strIdx
             }
 
             // Advance
-            matches[nextMatch] = strIdx;
-            ++nextMatch;
+            matches[next_match] = str_idx;
+            ++next_match;
             ++pat_counter;
         }
-        ++strIdx;
+        ++str_idx;
         ++str_counter;
     }
 
     // Determine if full fuzpat was matched
-    matched = fuzpat[pat_counter] == '\0' ? TRUE : FALSE;
+    matched = search_word[pat_counter] == '\0' ? TRUE : FALSE;
 
     // Calculate score
     if (matched) {
-        *outScore = fuzzy_match_compute_score(strBegin, strLen, matches, nextMatch);
+        *out_score = fuzzy_match_compute_score(whole_word, strLen, matches, next_match);
     }
 
     // Return best result
-    if (recursiveMatch && (!matched || bestRecursiveScore > *outScore)) {
+    if (recursiveMatch && (!matched || bestRecursiveScore > *out_score)) {
         // Recursive score is better than "this"
-        memcpy(matches, bestRecursiveMatches, maxMatches * sizeof(matches[0]));
-        *outScore = bestRecursiveScore;
-        return nextMatch;
+        memcpy(matches, bestRecursiveMatches, max_matches * sizeof(matches[0]));
+        *out_score = bestRecursiveScore;
+        return next_match;
     } else if (matched) {
-        return nextMatch; // "this" score is better than recursive
+        return next_match; // "this" score is better than recursive
     }
 
     return 0; // no match
@@ -222,24 +253,38 @@ static void fuzzy_match(search_query_t *query) {
     int numMatches = 0;
     int matchCount = 0;
 
-    char pat[PATH_MAX];
-    memset(pat, '\0', PATH_MAX);
-    strcpy(pat, query->search_word);
-    char *p = pat;
+    char search_word_copy[PATH_MAX];
+    memset(search_word_copy, '\0', PATH_MAX);
+    strcpy(search_word_copy, query->search_word);
+    char *search_word_ptr = search_word_copy;
 
     int counter = 0;
     int complete = FALSE;
     while (TRUE) {
         // Extract one word from the pattern (separated by space)
-        if (p[counter] == ' ') {
+        if (search_word_ptr[counter] == ' ') {
             ++counter;
             continue;
         }
-        if (p[counter] == '\0') {
-            complete = TRUE;
+        if (search_word_ptr[counter] == '\0') {
+            break;
         }
 
-        matchCount = fuzzy_match_recursive(&p[counter], query->line, 0, &query->result.score, query->search_word, query->line_len, NULL, query->result.matches + numMatches, query->max_matches - numMatches, 0, &recursionCount);
+        // clang-format off
+        matchCount = fuzzy_match_recursive(
+                &search_word_ptr[counter],
+                query->line,
+                0,
+                &query->result.score,
+                query->search_word,
+                query->line_len,
+                NULL,
+                query->result.matches + numMatches,
+                query->max_matches - numMatches,
+                0,
+                &recursionCount);
+        // clang-format on
+
         if (matchCount == 0) {
             numMatches = 0;
             break;
