@@ -18,7 +18,7 @@ typedef struct file_info_t {
     size_t f_len;
     int fuzzy_score;
     int mru_score;
-} __attribute__((aligned(ALIGN32))) file_info_t;
+} file_info_t;
 
 void deinit_file();
 const char *get_file_name(const char *path, str_pool_t ***pool);
