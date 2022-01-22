@@ -121,7 +121,7 @@ int write_mru(const char *mru_path, const char *path) {
         qsort(file_info, mru_entries_num, sizeof(file_info_t), mru_score_cmp);
     }
 
-    // For writing file from scrach
+    // For writing file from scratch
     FILE *wfp = fopen(mru_path, "w");
     if (wfp == NULL) {
         free(file_info);

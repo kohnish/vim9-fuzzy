@@ -72,11 +72,17 @@ def InitWindow(mode: string): void
         g:root_dir = getcwd()
     endif
 
+    var git_cmd = "git"
+    var rg_cmd = "rg"
+    if has("win64") || has("win32") || has("win16")
+        git_cmd = git_cmd .. ".exe"
+        rg_cmd = rg_cmd .. ".exe"
+    endif
     var git_dir = g:root_dir .. "/.git"
     if filereadable(git_dir) || isdirectory(git_dir)
-        g:list_cmd = "git ls-files " .. g:root_dir .. " --full-name"
+        g:list_cmd = git_cmd .. " ls-files " .. g:root_dir .. " --full-name"
     else
-        g:list_cmd = "rg --files --hidden --max-depth 5"
+        g:list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
     endif
 
     if exists('g:vim9_fuzzy_mru_path')
