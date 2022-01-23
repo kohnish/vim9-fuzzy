@@ -2,19 +2,13 @@
 #include "fuzzy.h"
 #include "mru.h"
 #include "search_helper.h"
-#include <ctype.h>
-#include <dirent.h>
 #include <jsmn.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <uv.h>
-#ifndef _WIN32
-#include <fnmatch.h>
-#endif
 
 #define MAX_JSON_TOKENS 128
 #define MAX_JSON_ELM_SIZE PATH_MAX
@@ -38,7 +32,7 @@ static int create_res_json(const char *cmd, file_info_t *file_info, size_t size,
 
 void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size) {
     static char json_res_str[MAX_REAL_RESPONSE_SIZE];
-    memset(json_res_str, 0, MAX_REAL_RESPONSE_SIZE);
+    memset(json_res_str, 0, (((long)MAX_REAL_RESPONSE_SIZE)));
 
     size_t send_sz = size;
     if (size > MAX_RESPONSE_LINES) {
@@ -47,8 +41,8 @@ void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t siz
     int j_res = create_res_json(cmd, file_info, send_sz, json_res_str);
     if (j_res >= 0) {
         static char stdout_buf[MAX_REAL_RESPONSE_SIZE];
-        memset(stdout_buf, 0, MAX_REAL_RESPONSE_SIZE);
-        setvbuf(stdout, stdout_buf, _IOFBF, MAX_REAL_RESPONSE_SIZE);
+        memset(stdout_buf, 0, (long)MAX_REAL_RESPONSE_SIZE);
+        setvbuf(stdout, stdout_buf, _IOFBF, (long)MAX_REAL_RESPONSE_SIZE);
         fprintf(stdout, "%s\n", json_res_str);
         fflush(stdout);
     }
@@ -61,7 +55,7 @@ static int json_eq(const char *json, jsmntok_t *tok, const char *s) {
     return -1;
 }
 
-int handle_json_msg(uv_loop_t *loop, const char *json_str) {
+void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
         toggle_cancel(1);
         while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
@@ -101,16 +95,14 @@ int handle_json_msg(uv_loop_t *loop, const char *json_str) {
 
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
-        return queue_search(loop, cmd, value, list_cmd);
+        queue_search(loop, cmd, value, list_cmd);
     } else if (strcmp(cmd, "init_mru") == 0) {
-        return queue_mru_search(loop, "", mru_path);
+        queue_mru_search(loop, "", mru_path);
     } else if (strcmp(cmd, "write_mru") == 0) {
-        return write_mru(mru_path, value);
+        write_mru(mru_path, value);
     } else if (strcmp(cmd, "mru") == 0) {
-        return queue_mru_search(loop, value, mru_path);
+        queue_mru_search(loop, value, mru_path);
     }
-
-    return -1;
 }
 
 void init_handlers() {
