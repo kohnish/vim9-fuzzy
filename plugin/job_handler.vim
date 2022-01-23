@@ -2,8 +2,8 @@ vim9script
 
 import "./window_handler.vim" as window_handler
 
-g:job = "null"
-g:channel = "null"
+var g_job: job
+var g_channel: channel
 
 def HandleStdout(channel: channel, msg: string): void
     try
@@ -36,12 +36,12 @@ export def StartFinderProcess(): void
     else
         executable = g:vim9_fuzzy_exe_path
     endif
-    g:job = job_start([executable], job_opt)
-    g:channel = job_getchannel(g:job)
+    g_job = job_start([executable], job_opt)
+    g_channel = job_getchannel(g_job)
 enddef
 
 
 export def WriteToChannel(msg: dict<any>): void
-    ch_sendexpr(g:channel, msg)
+    ch_sendexpr(g_channel, msg)
 enddef
 
