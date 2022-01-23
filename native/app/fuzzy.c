@@ -51,11 +51,10 @@
  * Compute a score for a fuzzy matched string. The matching character locations
  * are in 'matches'.
  */
-static int fuzzy_match_compute_score(const char *str, int strSz, const int *matches, int numMatches) {
-    int score;
+static size_t fuzzy_match_compute_score(const char *str, size_t strSz, const int *matches, size_t numMatches) {
+    size_t score;
     int penalty;
-    int unmatched;
-    int i;
+    size_t unmatched;
     // const char *p = str;
     // unsigned int sidx = 0;
 
@@ -74,11 +73,11 @@ static int fuzzy_match_compute_score(const char *str, int strSz, const int *matc
     score += UNMATCHED_LETTER_PENALTY * unmatched;
 
     // Apply ordering bonuses
-    for (i = 0; i < numMatches; ++i) {
-        unsigned int currIdx = matches[i];
+    for (size_t i = 0; i < numMatches; ++i) {
+        size_t currIdx = matches[i];
 
         if (i > 0) {
-            unsigned int prevIdx = matches[i - 1];
+            size_t prevIdx = matches[i - 1];
 
             // Sequential
             if (currIdx == (prevIdx + 1)) {
@@ -91,7 +90,7 @@ static int fuzzy_match_compute_score(const char *str, int strSz, const int *matc
         // Check for bonuses based on neighbor character value
         if (currIdx > 0) {
             // Camel case
-            int neighbor = ' ';
+            unsigned char neighbor = ' ';
             // int curr;
 
             neighbor = str[currIdx - 1];
@@ -115,7 +114,7 @@ static int fuzzy_match_compute_score(const char *str, int strSz, const int *matc
 }
 
 typedef struct search_result_t {
-    int score;
+    size_t score;
     int matches[MAX_FUZZY_MATCHES];
 } search_result_t;
 
@@ -140,22 +139,22 @@ typedef struct search_state_t {
 
 
 // clang-format off
-static int fuzzy_match_recursive(
+static size_t fuzzy_match_recursive(
         const char *search_word,
         const char *line,
         int str_idx,
-        int *out_score,
+        size_t *out_score,
         const char *whole_word,
-        int strLen,
+        size_t strLen,
         int *src_matches,
         int *matches,
-        int max_matches,
-        int next_match,
+        size_t max_matches,
+        size_t next_match,
         int *recursion_count) {
 // clang-format on
     int recursiveMatch = FALSE;
     int bestRecursiveMatches[MAX_FUZZY_MATCHES];
-    int bestRecursiveScore = 0;
+    size_t bestRecursiveScore = 0;
     int first_match;
     int matched;
 
@@ -173,13 +172,13 @@ static int fuzzy_match_recursive(
         int c1;
         int c2;
 
-        c1 = tolower(search_word[pat_counter]);
-        c2 = tolower(line[str_counter]);
+        c1 = tolower((unsigned char)search_word[pat_counter]);
+        c2 = tolower((unsigned char)line[str_counter]);
 
         // Found match
         if (c1 == c2) {
             int recursiveMatches[MAX_FUZZY_MATCHES];
-            int recursiveScore = 0;
+            size_t recursiveScore = 0;
 
             // Supplied matches buffer was too short
             if (next_match >= max_matches) {
@@ -250,8 +249,8 @@ static int fuzzy_match_recursive(
 static void fuzzy_match(search_query_t *query) {
     int recursionCount = 0;
     int score = 0;
-    int numMatches = 0;
-    int matchCount = 0;
+    size_t numMatches = 0;
+    size_t matchCount = 0;
 
     char search_word_copy[PATH_MAX];
     memset(search_word_copy, '\0', PATH_MAX);
@@ -300,8 +299,8 @@ static void fuzzy_match(search_query_t *query) {
 }
 
 static int result_compare(const void *s1, const void *s2) {
-    int v1 = ((file_info_t *)s1)->fuzzy_score;
-    int v2 = ((file_info_t *)s2)->fuzzy_score;
+    size_t v1 = ((file_info_t *)s1)->fuzzy_score;
+    size_t v2 = ((file_info_t *)s2)->fuzzy_score;
 
     return v1 == v2 ? 0 : v1 > v2 ? -1 : 1;
 }
@@ -333,7 +332,7 @@ void toggle_cancel(int val) {
     uv_mutex_unlock(&cancel_mutex);
 }
 
-size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
+void start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
     size_t matched_len = 0;
     static char word[MAX_VIM_INPUT];
     memset(word, 0, MAX_VIM_INPUT);
@@ -347,7 +346,7 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
         if (cancel == 1) {
             toggle_cancel(0);
             free(file_res);
-            return -1;
+            return;
         }
         search_result_t search_result = {.matches = {0}, .score = 0};
 
@@ -377,5 +376,4 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
     send_res_from_file_info(cmd, file_res, matched_len);
 
     free(file_res);
-    return matched_len;
 }

@@ -37,7 +37,7 @@ void deinit_mru_mutex() {
     uv_mutex_destroy(&mru_init_mutex);
 }
 
-static int load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, FILE *fp) {
+static size_t load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, FILE *fp) {
     static size_t current_size = INITIAL_CACHE_SIZE;
     if (*file_info == NULL) {
         *file_info = malloc(sizeof(file_info_t) * current_size);
@@ -49,7 +49,7 @@ static int load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_info
     char key_buf[PATH_MAX] = {0};
     char val_buf[PATH_MAX] = {0};
     while (1) {
-        char c = fgetc(fp);
+        char c = (char)fgetc(fp);
         if (c == ':') {
             current_mode = 1;
             if (line_counter >= current_size) {
@@ -91,7 +91,7 @@ static int mru_score_cmp(const void *s1, const void *s2) {
     return v1 == v2 ? 0 : v1 > v2 ? -1 : 1;
 }
 
-int write_mru(const char *mru_path, const char *path) {
+size_t write_mru(const char *mru_path, const char *path) {
     str_pool_t **pool = init_str_pool(10240);
     file_info_t *file_info = NULL;
     size_t mru_entries_num = 0;
@@ -100,7 +100,7 @@ int write_mru(const char *mru_path, const char *path) {
     FILE *fp = fopen(mru_path, "a+");
     if (fp == NULL) {
         deinit_str_pool(pool);
-        return -12;
+        return 0;
     }
     fseek(fp, 0, SEEK_SET);
     load_mru_to_file_info(&pool, &file_info, &mru_entries_num, fp);
@@ -126,7 +126,7 @@ int write_mru(const char *mru_path, const char *path) {
     if (wfp == NULL) {
         free(file_info);
         deinit_str_pool(pool);
-        return -14;
+        return 0;
     }
     for (size_t i = 0; i < mru_entries_num; i++) {
         fprintf(wfp, "%s:%i\n", file_info[i].file_path, file_info[i].mru_score);

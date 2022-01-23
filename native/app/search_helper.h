@@ -16,7 +16,7 @@ typedef struct file_info_t {
     const char *file_path;
     const char *file_name;
     size_t f_len;
-    int fuzzy_score;
+    size_t fuzzy_score;
     int mru_score;
 } file_info_t;
 

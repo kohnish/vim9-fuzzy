@@ -18,7 +18,7 @@ typedef struct response_t {
 } response_t;
 
 void deinit_handlers();
-int handle_json_msg(uv_loop_t *loop, const char *json_str);
+void handle_json_msg(uv_loop_t *loop, const char *json_str);
 void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size);
 void init_handlers();
 
