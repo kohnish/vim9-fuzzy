@@ -18,6 +18,7 @@
 #include <string.h>
 
 #define INITIAL_RES_NUM 500
+#define INITIAL_MATCH_CAHR_NUM 30
 #define MAX_FUZZY_MATCHES 256
 #define FALSE 0
 #define TRUE 1
@@ -332,7 +333,7 @@ void toggle_cancel(int val) {
     uv_mutex_unlock(&cancel_mutex);
 }
 
-void start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
+size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
     size_t matched_len = 0;
     static char word[MAX_VIM_INPUT];
     memset(word, 0, MAX_VIM_INPUT);
@@ -346,9 +347,9 @@ void start_fuzzy_response(const char *search_keyword, const char *cmd, file_info
         if (cancel == 1) {
             toggle_cancel(0);
             free(file_res);
-            return;
+            return matched_len;
         }
-        search_result_t search_result = {.matches = {0}, .score = 0};
+        search_result_t search_result = { .matches = {0}, .score = 0 };
 
         // clang-format off
         search_query_t query = {
@@ -376,4 +377,5 @@ void start_fuzzy_response(const char *search_keyword, const char *cmd, file_info
     send_res_from_file_info(cmd, file_res, matched_len);
 
     free(file_res);
+    return matched_len;
 }

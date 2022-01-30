@@ -3,7 +3,9 @@
 #include "mru.h"
 #include "search_helper.h"
 #include <gtest/gtest.h>
+#include <memory>
 
+// ToDo: Fix this
 TEST(fuzzy, start_fuzzy_response) {
     init_cancel_mutex();
 
