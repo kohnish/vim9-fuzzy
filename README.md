@@ -38,7 +38,7 @@ curl https://github.com/kohnish/vim9-fuzzy/releases/linux-vim9-fuzzy -o vim9-fuz
 Configuration
 ```vim
 # Enable vim9-fuzzy
-packadd vim9-fuzzy
+packadd! vim9-fuzzy
 
 # Root path to search from (No default yet)
 var proj_dir = getcwd()

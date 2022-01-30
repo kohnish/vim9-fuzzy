@@ -17,7 +17,7 @@ typedef struct search_data_t {
     size_t file_info_len;
 } search_data_t;
 
-void start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len);
+size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len);
 void toggle_cancel(int val);
 void init_cancel_mutex();
 void deinit_cancel_mutex();
