@@ -170,6 +170,7 @@ def FocusOrOpen(filename: string): void
     for buf in buffers
         if buf.loaded && buf.name == filename && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
+            return
         endif
     endfor
     if &buftype == "terminal" && !FocusOnNonTerminal(filename)
