@@ -155,6 +155,20 @@ def PrintFakePrompt(line: string, cursor_pos: number): void
     redraw
 enddef
 
+def FocusOrOpen(filename: string): void
+    var buffers = getbufinfo()
+    for buf in buffers
+        if buf.loaded && buf.name == filename && len(buf.windows) > 0
+            win_gotoid(buf.windows[0])
+        endif
+    endfor
+    if &modified
+        execute 'vsplit ' .. filename
+    else
+        execute "edit " .. filename
+    endif
+enddef
+
 
 def BlockInput(mode: string): void
     g_current_line = ""
@@ -279,7 +293,7 @@ def BlockInput(mode: string): void
                 var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
                 job_handler.WriteToChannel(mru_msg)
                 if input == "\<CR>"
-                    execute 'edit ' .. file_full_path
+                    FocusOrOpen(file_full_path)
                 elseif input == "\<C-]>"
                     execute 'botright vsp ' .. file_full_path
                 elseif input == "\<C-t>"
