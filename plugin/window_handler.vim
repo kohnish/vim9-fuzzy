@@ -155,6 +155,16 @@ def PrintFakePrompt(line: string, cursor_pos: number): void
     redraw
 enddef
 
+def FocusOnNonTerminal(filename: string): bool
+    for buf in getbufinfo()
+        if buf.loaded && len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
+            win_gotoid(buf.windows[0])
+            return true
+        endif
+    endfor
+    return false
+enddef
+
 def FocusOrOpen(filename: string): void
     var buffers = getbufinfo()
     for buf in buffers
@@ -162,7 +172,9 @@ def FocusOrOpen(filename: string): void
             win_gotoid(buf.windows[0])
         endif
     endfor
-    if &modified
+    if &buftype == "terminal" && !FocusOnNonTerminal(filename)
+        execute 'tabnew ' .. filename
+    elseif &modified
         execute 'vsplit ' .. filename
     else
         execute "edit " .. filename
