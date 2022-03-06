@@ -160,16 +160,17 @@ var WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL = "t"
 var WIN_NOT_FOUND_ONLY_TERMINAL = "o"
 var WIN_NOT_FOUND = "n"
 def FocusIfOpen(filename: string): string
+    var f_ret = WIN_NOT_FOUND
     for buf in getbufinfo()
         if buf.loaded && buf.name == filename && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
             return WIN_FOCUSED
         elseif &buftype == "terminal" && buf.loaded && len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
             win_gotoid(buf.windows[0])
-            return WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL
+            f_ret = WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL
         endif
     endfor
-    if &buftype == "terminal"
+    if &buftype == "terminal" && f_ret != WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL
         return WIN_NOT_FOUND_ONLY_TERMINAL
     endif
     return WIN_NOT_FOUND
