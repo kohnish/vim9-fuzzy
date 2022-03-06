@@ -155,33 +155,38 @@ def PrintFakePrompt(line: string, cursor_pos: number): void
     redraw
 enddef
 
-def FocusOnNonTerminal(filename: string): bool
+var focused = "f"
+var not_found_focused_on_non_terminal = "t"
+var not_found_only_terminal = "o"
+var not_found = "n"
+def FocusIfOpen(filename: string): string
     for buf in getbufinfo()
-        if buf.loaded && len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
+        if buf.loaded && buf.name == filename && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
-            return true
+            return focused
+        elseif &buftype == "terminal" && buf.loaded && len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
+            win_gotoid(buf.windows[0])
+            return not_found_focused_on_non_terminal
         endif
     endfor
-    return false
+    if &buftype == "terminal"
+        return not_found_only_terminal
+    endif
+    return not_found
 enddef
 
 def FocusOrOpen(filename: string): void
-    var buffers = getbufinfo()
-    for buf in buffers
-        if buf.loaded && buf.name == filename && len(buf.windows) > 0
-            win_gotoid(buf.windows[0])
-            return
-        endif
-    endfor
-    if &buftype == "terminal" && !FocusOnNonTerminal(filename)
+    var f_ret = FocusIfOpen(filename)
+    if f_ret == not_found_only_terminal
         execute 'tabnew ' .. filename
-    elseif &modified
-        execute 'vsplit ' .. filename
-    else
-        execute "edit " .. filename
+    elseif f_ret != focused
+        if &modified
+            execute 'vsplit ' .. filename
+        else
+            execute "edit " .. filename
+        endif
     endif
 enddef
-
 
 def BlockInput(mode: string): void
     g_current_line = ""
