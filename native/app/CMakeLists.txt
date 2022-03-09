@@ -27,6 +27,11 @@ if(WIN32)
                 userenv
                 psapi
     )
+elseif(UNIX AND NOT APPLE)
+    list(APPEND lib
+        dl
+        pthread
+        )
 endif()
 
 set(inc
