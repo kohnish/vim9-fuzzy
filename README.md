@@ -31,9 +31,15 @@ Installation:
 ```sh
 mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
-cd ~/.vim/pack/plugins/opt/vim9-fuzzy
-# Not available yet (See Build section)
-curl https://github.com/kohnish/vim9-fuzzy/releases/linux-vim9-fuzzy -o vim9-fuzzy
+# For Linux 
+curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
+chmod +x 
+# For Windows
+curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
+chmod +x 
+# Or see the build section for compiling locally
+
+
 ```
 Configuration
 ```vim
