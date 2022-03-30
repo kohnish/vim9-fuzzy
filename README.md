@@ -33,10 +33,10 @@ mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 # For Linux 
 curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
-chmod +x 
+chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
 # For Windows
 curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
-chmod +x 
+chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 # Or see the build section for compiling locally
 
 
