@@ -1,0 +1,71 @@
+name: release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: alpine:edge
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: dependencies
+      run: apk update && apk upgrade && apk add cmake gcc g++ libc-dev pkgconf make mingw-w64-gcc
+
+    - name: cmake
+      run: mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_FULL_STATIC=ON ..
+
+    - name: build
+      run: cd build && make -j
+      
+    - name: install
+      run: cd build && make install/strip
+
+    - name: cmake-win
+      run: mkdir -p build-win && cd build-win && cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=ON -DCMAKE_TOOLCHAIN_FILE=../native/toolchains/windows.cmake ..
+
+    - name: build-win
+      run: cd build-win && make -j
+      
+    - name: install-win
+      run: cd build-win && make install/strip
+
+    - name: release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: upload
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: bin/vim9-fuzzy
+        asset_name: vim9-fuzzy-linux-x86-64
+        asset_content_type: application/zip
+
+    - name: upload-win
+      id: upload-release-asset-win
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: bin/vim9-fuzzy.exe
+        asset_name: vim9-fuzzy-win-x86-64
+        asset_content_type: application/zip
