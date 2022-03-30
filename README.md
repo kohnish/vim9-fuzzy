@@ -14,15 +14,14 @@ ToDo
  - Remove git and rg executables dependencies
  - UTF-8 support
  - Allow custom keybinding
- - Test on Windows and Mac
+ - Test on Windows
  - Make CI test
- - Make an initial release
 
 Runtime requirements
 --------------------
  - Vim with vim9 script support
  - Git
- - Linux
+ - Linux or Mac. (Might work on Windows)
  - Rg (For non-git dir)
 
 Usage
@@ -32,10 +31,10 @@ Installation:
 mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 # For Linux 
-curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
+curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
 chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
 # For Windows
-curl https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
+curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.1/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 # Or see the build section for compiling locally
 

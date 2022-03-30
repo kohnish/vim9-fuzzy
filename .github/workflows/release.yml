@@ -26,7 +26,7 @@ jobs:
       run: cd build && make -j
       
     - name: install
-      run: cd build && make install/strip
+      run: cd build && make install/strip && sha256sum ../bin/vim9-fuzzy | awk '{print $1}' > sha256.txt
 
     - name: cmake-win
       run: mkdir -p build-win && cd build-win && cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_STATIC=ON -DCMAKE_TOOLCHAIN_FILE=../native/toolchains/windows.cmake ..
@@ -35,7 +35,7 @@ jobs:
       run: cd build-win && make -j
       
     - name: install-win
-      run: cd build-win && make install/strip
+      run: cd build-win && make install/strip && sha256sum ../bin/vim9-fuzzy.exe | awk '{print $1}' > sha256.txt
 
     - name: release
       id: create_release
@@ -59,6 +59,17 @@ jobs:
         asset_name: vim9-fuzzy-linux-x86-64
         asset_content_type: application/zip
 
+    - name: sha256-upload
+      id: upload-sha256-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/sha256.txt
+        asset_name: sha256-linux-x86-64.txt
+        asset_content_type: application/zip
+
     - name: upload-win
       id: upload-release-asset-win
       uses: actions/upload-release-asset@v1
@@ -68,4 +79,15 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: bin/vim9-fuzzy.exe
         asset_name: vim9-fuzzy-win-x86-64
+        asset_content_type: application/zip
+
+    - name: sha256-upload-win
+      id: upload-sha256-win-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build-win/sha256.txt
+        asset_name: sha256-win-x86-64.txt
         asset_content_type: application/zip
