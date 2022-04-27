@@ -29,7 +29,7 @@ export def StartFinderProcess(): void
     var executable = ""
     if !exists('g:vim9_fuzzy_exe_path')
         executable = fnamemodify(resolve(expand('<stack>:p')), ':h') .. "/../bin/vim9-fuzzy"
-        if has("win64") || has("win32") || has("win16")
+        if has("win64") || has("win32") || has("win16") || has("win32unix")
             executable = executable .. ".exe"
         endif
     else
