@@ -12,14 +12,18 @@ extern "C" {
 #define MAX_FILENAME_LEN PATH_MAX
 #define ALIGN32 32
 
+#define AUTO_FREE_FILE_INFO __attribute__((__cleanup__(free_file_info))) 
+
 typedef struct file_info_t {
     const char *file_path;
     const char *file_name;
     size_t f_len;
     size_t fuzzy_score;
     int mru_score;
+    unsigned int match_pos;
 } file_info_t;
 
+void free_file_info(file_info_t **f);
 void deinit_file();
 const char *get_file_name(const char *path, str_pool_t ***pool);
 int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd);
