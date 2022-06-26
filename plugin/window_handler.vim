@@ -41,7 +41,7 @@ enddef
 
 
 def InitWindow(mode: string): void
-    noautocmd keepalt keepjumps botright split \ Vim9 Fuzzy
+    noautocmd keepalt keepjumps botright split Vim9 Fuzzy
     g_search_window_name = bufname()
     resize 20
 
