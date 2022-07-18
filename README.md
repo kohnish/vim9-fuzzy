@@ -62,7 +62,7 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 # Search by full path
 noremap <C-y> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
-noremap <C-l> :Vim9FuzzyMru<CR>
+noremap <C-e> :Vim9FuzzyMru<CR>
 ```
 
 Build requirements
