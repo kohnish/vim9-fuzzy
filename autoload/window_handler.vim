@@ -1,14 +1,15 @@
 vim9script
 
-import "./job_handler.vim" as job_handler
+import "./job_handler.vim"
 
 # ToDo: stop using globals
+var g_initialised = false
 var g_search_window_name = ""
 var g_root_dir = ""
 var g_list_cmd = ""
 var g_current_line = ""
 var g_mru_path = ""
-var g_script_dir = expand('<stack>:p:h')
+const g_script_dir = expand('<script>:p:h')
 
 export def PrintResult(json_msg: dict<any>): void
     deletebufline(g_search_window_name, 1, "$")
@@ -326,8 +327,11 @@ def BlockInput(mode: string): void
     endwhile
 enddef
 
-
 export def StartWindow(mode: string): void
+    if !g_initialised
+        job_handler.StartFinderProcess()
+        g_initialised = true
+    endif
     InitWindow(mode)
     try
         BlockInput(mode)

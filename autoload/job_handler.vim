@@ -1,8 +1,9 @@
 vim9script
 
-import "./window_handler.vim" as window_handler
+import "./window_handler.vim"
 
 var g_channel: channel
+var default_executable_path = fnamemodify(resolve(expand('<script>:p')), ':h') .. "/../bin/vim9-fuzzy"
 
 def HandleStdout(channel: channel, msg: string): void
     try
@@ -28,9 +29,9 @@ export def StartFinderProcess(): void
     }
     var executable = ""
     if !exists('g:vim9_fuzzy_exe_path')
-        executable = fnamemodify(resolve(expand('<stack>:p')), ':h') .. "/../bin/vim9-fuzzy"
+        executable = default_executable_path
         if has("win64") || has("win32") || has("win16") || has("win32unix")
-            executable = executable .. ".exe"
+            executable = default_executable_path .. ".exe"
         endif
     else
         executable = g:vim9_fuzzy_exe_path
