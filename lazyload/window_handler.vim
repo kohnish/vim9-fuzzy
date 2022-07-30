@@ -9,6 +9,7 @@ var g_root_dir = ""
 var g_list_cmd = ""
 var g_current_line = ""
 var g_mru_path = ""
+var g_orig_win = -1
 const g_script_dir = expand('<script>:p:h')
 
 export def PrintResult(json_msg: dict<any>): void
@@ -185,6 +186,7 @@ def FocusOrOpen(filename: string): void
         if &modified
             execute 'vsplit ' .. filename
         else
+            win_gotoid(g_orig_win)
             execute "edit " .. filename
         endif
     endif
@@ -328,6 +330,7 @@ def BlockInput(mode: string): void
 enddef
 
 export def StartWindow(mode: string): void
+    g_orig_win = win_getid()
     if !g_initialised
         job_handler.StartFinderProcess()
         g_initialised = true
