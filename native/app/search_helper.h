@@ -21,7 +21,7 @@ typedef struct file_info_t {
     size_t f_len;
     size_t fuzzy_score;
     int mru_score;
-    int match_pos_flag;
+    unsigned long match_pos_flag;
 } file_info_t;
 
 void free_file_info(file_info_t **f);
