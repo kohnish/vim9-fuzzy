@@ -387,6 +387,8 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
             file_res[matched_len].fuzzy_score = query.result.score;
             file_res[matched_len].f_len = files[i].f_len;
             file_res[matched_len].match_pos_flag = binstr_to_int(query.result.match_pos);
+            // printf("WIP: %s\n", query.result.match_pos);
+            // fflush(stdout);
             ++matched_len;
         }
     }

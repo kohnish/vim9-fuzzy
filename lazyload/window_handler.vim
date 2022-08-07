@@ -48,14 +48,12 @@ export def PrintResult(json_msg: dict<any>): void
             add(lines, i["name"])
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
-            var highlights_pos = []
             for j in bin_list
                 if j == 1
-                    add(highlights_pos, [line_counter, col_counter])
+                    matchaddpos("matched_str_colour", [[line_counter, col_counter]])
                 endif
                 col_counter += 1
             endfor
-            matchaddpos("matched_str_colour", highlights_pos)
             line_counter += 1
         endfor
         setbufline(g_search_window_name, 1, lines)
