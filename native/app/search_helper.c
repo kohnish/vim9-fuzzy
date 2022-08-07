@@ -38,6 +38,10 @@ void free_file_info(file_info_t **f) {
     free(*f);
 }
 
+void free_str(char **s) {
+    free(*s);
+}
+
 const char *get_file_name(const char *path, str_pool_t ***pool) {
     char buf[PATH_MAX] = {0};
     size_t pos = 0;
