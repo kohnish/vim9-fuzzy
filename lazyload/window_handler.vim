@@ -44,20 +44,20 @@ export def PrintResult(json_msg: dict<any>): void
         highlight matched_str_colour guifg=red ctermfg=red term=bold gui=bold
         var line_counter = 1
         var lines = []
-        var highlights_pos = []
         for i in json_msg["result"]
             add(lines, i["name"])
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
+            var highlights_pos = []
             for j in bin_list
                 if j == 1
                     add(highlights_pos, [line_counter, col_counter])
                 endif
                 col_counter += 1
             endfor
+            matchaddpos("matched_str_colour", highlights_pos)
             line_counter += 1
         endfor
-        matchaddpos("matched_str_colour", highlights_pos)
         setbufline(g_search_window_name, 1, lines)
     endif
     redraw

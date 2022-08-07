@@ -255,8 +255,8 @@ static size_t fuzzy_match_recursive(
     return 0; // no match
 }
 
-int binstr_to_int(const char *s) {
-    return (int)strtol(s, NULL, 2);
+unsigned long binstr_to_int(const char *s) {
+    return strtoul(s, NULL, 2);
 }
 
 static void fuzzy_match(search_query_t *query) {

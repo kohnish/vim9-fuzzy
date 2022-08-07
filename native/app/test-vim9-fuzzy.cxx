@@ -11,6 +11,7 @@ TEST(fuzzy, start_fuzzy_response) {
 
     file_info_t files_list[] = {
         { "path_name", "file_name", 1, 0, 0, 0 },
+        { "native/app/json_msg_handler.c", "json_msg_handler.c", 1, 0, 0, 0 },
     };
     size_t match_num = start_fuzzy_response("1", "file", files_list, 1);
     ASSERT_EQ(match_num, 0);
@@ -27,6 +28,7 @@ TEST(fuzzy, start_fuzzy_response) {
     //match_num = start_fuzzy_response("fe", "file", files_list, 1);
     match_num = start_fuzzy_response("name", "file", files_list, 1);
     match_num = start_fuzzy_response("file_name", "file", files_list, 1);
+    match_num = start_fuzzy_response("jsonmsghandler", "file", files_list, 2);
 
     deinit_cancel_mutex();
 }

@@ -23,7 +23,7 @@ static int create_res_json(const char *cmd, file_info_t *file_info, size_t size,
     }
     int json_size = sprintf(buf, "{\"cmd\": \"%s\", \"result\": [", cmd);
     for (size_t i = 0; i < size; i++) {
-        int add_size = sprintf(&buf[json_size], "{\"name\": \"%s\", \"match_pos\": %i},", file_info[i].file_path, file_info[i].match_pos_flag);
+        int add_size = sprintf(&buf[json_size], "{\"name\": \"%s\", \"match_pos\": %lu},", file_info[i].file_path, file_info[i].match_pos_flag);
         json_size += add_size;
     }
     sprintf(&buf[json_size - 1], "]}\n");
