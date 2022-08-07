@@ -12,24 +12,49 @@ var g_mru_path = ""
 var g_orig_win = -1
 const g_script_dir = expand('<script>:p:h')
 
+def IntToBin(n: number, fill_len: number): list<any>
+    var bin_list = []
+    var current_num = n
+    var counter = 0
+    while true
+        if (current_num % 2) == 1
+            add(bin_list, 1)
+        else
+            add(bin_list, 0)
+        endif
+        if current_num <= 1
+            break
+        endif
+        current_num = current_num / 2
+        counter += 1
+    endwhile
+    var rest = fill_len - counter
+    if rest > 0
+        for i in range(rest)
+            add(bin_list, 0)
+        endfor
+    endif
+    return reverse(bin_list)
+enddef
+
 export def PrintResult(json_msg: dict<any>): void
     deletebufline(g_search_window_name, 1, "$")
     if len(json_msg["result"]) != 0
         clearmatches()
         highlight matched_str_colour guifg=red ctermfg=red term=bold gui=bold
-        var counter = 0
-        var line_len = len(g_current_line)
-        matchadd("matched_str_colour", g_current_line)
-        # ToDo: Properly highlight fuzzy matched characters
-        for c in split(g_current_line, '\zs')
-            if counter != line_len - 1
-                matchadd("matched_str_colour", g_current_line[counter : counter + 1])
-            else
-                matchadd("matched_str_colour", g_current_line[counter - 1 : counter])
-            endif
-            counter = counter + 1
+        var line_counter = 1
+        for i in json_msg["result"]
+            var bin_list = IntToBin(i["match_pos"], len(i["name"]))
+            var col_counter = 0
+            for j in bin_list
+                if j == 1
+                    matchaddpos("matched_str_colour", [[line_counter, col_counter]])
+                endif
+                col_counter += 1
+            endfor
+            line_counter += 1
         endfor
-        setbufline(g_search_window_name, 1, json_msg["result"])
+        setbufline(g_search_window_name, 1, map(json_msg["result"], (i, v) => v["name"]))
     endif
     redraw
 enddef

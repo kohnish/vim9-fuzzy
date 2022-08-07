@@ -13,6 +13,7 @@ extern "C" {
 #define ALIGN32 32
 
 #define AUTO_FREE_FILE_INFO __attribute__((__cleanup__(free_file_info))) 
+#define AUTO_FREE_STR __attribute__((__cleanup__(free_str))) 
 
 typedef struct file_info_t {
     const char *file_path;
@@ -20,10 +21,11 @@ typedef struct file_info_t {
     size_t f_len;
     size_t fuzzy_score;
     int mru_score;
-    unsigned int match_pos;
+    int match_pos_flag;
 } file_info_t;
 
 void free_file_info(file_info_t **f);
+void free_str(char **s);
 void deinit_file();
 const char *get_file_name(const char *path, str_pool_t ***pool);
 int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd);
