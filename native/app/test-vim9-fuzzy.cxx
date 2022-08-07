@@ -28,6 +28,8 @@ TEST(fuzzy, start_fuzzy_response) {
     //match_num = start_fuzzy_response("fe", "file", files_list, 1);
     match_num = start_fuzzy_response("name", "file", files_list, 1);
     match_num = start_fuzzy_response("file_name", "file", files_list, 1);
+    match_num = start_fuzzy_response("handler", "file", files_list, 2);
+    match_num = start_fuzzy_response("jsonmsg", "file", files_list, 2);
     match_num = start_fuzzy_response("jsonmsghandler", "file", files_list, 2);
 
     deinit_cancel_mutex();
