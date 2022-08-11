@@ -252,7 +252,7 @@ def BlockInput(mode: string): void
                 endif
             endif
             SendCharMsg(mode, g_current_line)
-        elseif input == "\<Left>"
+        elseif input == "\<Left>" || input == "\<C-h>"
             if fake_cursor_position > 0
                 fake_cursor_position = fake_cursor_position - 1
                 PrintFakePrompt(g_current_line, fake_cursor_position)
@@ -263,7 +263,7 @@ def BlockInput(mode: string): void
         elseif input == "\<END>"
             fake_cursor_position = len(g_current_line)
             PrintFakePrompt(g_current_line, fake_cursor_position)
-        elseif input == "\<Right>"
+        elseif input == "\<Right>" || input == "\<C-l>"
             if fake_cursor_position <= len(g_current_line) - 1
                 InitPrompt()
                 fake_cursor_position = fake_cursor_position + 1
@@ -320,6 +320,7 @@ def BlockInput(mode: string): void
             CloseWindow()
             break
         elseif input == "\<C-k>"
+            # Not working...
             norm k
             redraw
         elseif input == "\<C-j>"
