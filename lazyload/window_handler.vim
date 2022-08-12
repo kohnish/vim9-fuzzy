@@ -320,7 +320,6 @@ def BlockInput(mode: string): void
             CloseWindow()
             break
         elseif input == "\<C-k>"
-            # Not working...
             norm k
             redraw
         elseif input == "\<C-j>"
