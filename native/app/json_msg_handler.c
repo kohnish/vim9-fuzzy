@@ -14,7 +14,6 @@
 #define MAX_JSON_ELM_SIZE PATH_MAX
 #define MAX_RESPONSE_SIZE (MAX_RESPONSE_LINES * PATH_MAX)
 #define MAX_REAL_RESPONSE_SIZE (MAX_RESPONSE_SIZE * 2)
-#define RES_SLEEP_SEC 1500
 
 static int create_res_json(const char *cmd, file_info_t *file_info, size_t size, char *buf) {
     if (size == 0) {
