@@ -50,7 +50,7 @@ static int32_t compute_score(int32_t jump, bool first_char, const char *restrict
     const int leading_letter_penalty = -5;
     const int max_leading_letter_penalty = -15;
 
-    int32_t score = 0;
+    int32_t score = 100;
 
     /* Apply bonuses. */
     if (!first_char && jump == 0) {
@@ -99,7 +99,7 @@ static int32_t fuzzy_match_recurse(const char *restrict pattern, const char *res
         int32_t subscore = fuzzy_match_recurse(pattern + 1, match + 1, result, false);
         best_score = MAX(best_score, subscore);
         match++;
-        ++counter;
+        counter++;
     }
 
     if (best_score == INT32_MIN) {
@@ -118,20 +118,21 @@ static int32_t fuzzy_match_recurse(const char *restrict pattern, const char *res
 static int32_t fuzzy_match(search_query_t *query) {
     const int unmatched_letter_penalty = -1;
     const size_t slen = strlen(query->search_word);
+    
     query->result.score = 100;
 
     if (*query->line == '\0') {
         return query->result.score;
     }
-    if (slen < query->line_len) {
+    if (query->line_len < slen) {
         return INT32_MIN;
     }
 
     /* We can already penalise any unused letters. */
-    query->result.score += unmatched_letter_penalty * (int32_t)(slen - query->line_len);
+    query->result.score += unmatched_letter_penalty * (int32_t)(query->line_len - slen);
 
     /* Perform the match. */
-    query->result.score = fuzzy_match_recurse(query->line, query->search_word, &query->result, true);
+    query->result.score = fuzzy_match_recurse(query->search_word, query->line, &query->result, true);
 
     return query->result.score;
 }
@@ -181,8 +182,9 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
             file_res[matched_len].file_path = files[i].file_path;
             file_res[matched_len].fuzzy_score = query.result.score;
             file_res[matched_len].match_pos_flag = binstr_to_int(query.result.match_pos);
-            // printf("WIP: %s\n", query.result.match_pos);
-            // fflush(stdout);
+            printf("WIP: score %d\n", query.result.score);
+            printf("WIP: match %s\n", query.result.match_pos);
+            fflush(stdout);
             ++matched_len;
         }
     }
