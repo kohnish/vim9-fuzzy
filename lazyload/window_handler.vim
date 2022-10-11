@@ -352,7 +352,7 @@ def BlockInput(mode: string): void
 
             # On yank mode, we get random strings
             if mode == "yank"
-                system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", line)
+                execute ':normal! yy'
                 CloseWindow()
                 return
             endif
