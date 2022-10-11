@@ -21,6 +21,7 @@ typedef struct file_info_t {
     size_t f_len;
     size_t fuzzy_score;
     int mru_score;
+    time_t yank_score;
     unsigned long match_pos_flag;
 } file_info_t;
 

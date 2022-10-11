@@ -6,6 +6,7 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 
 ToDo
 ----
+ - Finish yank manager
  - Improve fuzzy algorithm and colour matching characters properly
  - Reduce hard coding
  - Add backtrace

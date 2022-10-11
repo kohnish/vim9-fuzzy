@@ -1,6 +1,7 @@
 #include "json_msg_handler.h"
 #include "fuzzy.h"
 #include "mru.h"
+#include "yank.h"
 #include "search_helper.h"
 #include <jsmn.h>
 #include <limits.h>
@@ -69,6 +70,7 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     char cmd[MAX_JSON_ELM_SIZE] = {0};
     char value[MAX_JSON_ELM_SIZE] = {0};
     char mru_path[PATH_MAX] = {0};
+    char yank_path[PATH_MAX] = {0};
     char list_cmd[PATH_MAX] = {0};
     jsmn_parse(&j_parser, json_str, strlen(json_str) + 1, j_tokens, sizeof(j_tokens) / sizeof(j_tokens[0]));
     // easy parsing. No depth guarantee.
@@ -85,6 +87,10 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
             jsmntok_t *next_tok = &j_tokens[i + 1];
             strncpy(mru_path, json_str + next_tok->start, next_tok->end - next_tok->start);
             i++;
+        } else if (json_eq(json_str, &j_tokens[i], "yank_path") == 0) {
+            jsmntok_t *next_tok = &j_tokens[i + 1];
+            strncpy(yank_path, json_str + next_tok->start, next_tok->end - next_tok->start);
+            i++;
         } else if (json_eq(json_str, &j_tokens[i], "list_cmd") == 0) {
             jsmntok_t *next_tok = &j_tokens[i + 1];
             strncpy(list_cmd, json_str + next_tok->start, next_tok->end - next_tok->start);
@@ -99,6 +105,10 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         queue_mru_search(loop, "", mru_path);
     } else if (strcmp(cmd, "write_mru") == 0) {
         write_mru(mru_path, value);
+    } else if (strcmp(cmd, "init_yank") == 0) {
+        queue_yank_search(loop, "", yank_path);
+    } else if (strcmp(cmd, "write_yank") == 0) {
+        write_yank(yank_path, value);
     } else if (strcmp(cmd, "mru") == 0) {
         queue_mru_search(loop, value, mru_path);
     }
