@@ -392,7 +392,7 @@ export def StartWindow(mode: string): void
     endtry
 enddef
 
-def AppendYankHist(contents: list<any>): void
+def Osc52YankHist(contents: list<any>): void
     if exists('g:vim9_fuzzy_yank_path')
         g_yank_path = g:vim9_fuzzy_yank_path
     else
@@ -408,5 +408,5 @@ def AppendYankHist(contents: list<any>): void
 enddef
 augroup Vim9FuzzyYank
     autocmd!
-    autocmd TextYankPost * AppendYankHist(v:event.regcontents)
+    autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
 augroup END
