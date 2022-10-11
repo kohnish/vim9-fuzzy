@@ -117,9 +117,8 @@ size_t write_mru(const char *mru_path, const char *path) {
         file_info[mru_entries_num].mru_score = 1;
         file_info[mru_entries_num].file_path = str(&pool, path);
         mru_entries_num++;
-    } else {
-        qsort(file_info, mru_entries_num, sizeof(file_info_t), mru_score_cmp);
     }
+    qsort(file_info, mru_entries_num, sizeof(file_info_t), mru_score_cmp);
 
     // For writing file from scratch
     FILE *wfp = fopen(mru_path, "w");
