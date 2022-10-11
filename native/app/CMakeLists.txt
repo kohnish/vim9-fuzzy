@@ -6,6 +6,7 @@ set(src
     search_helper.c
     fuzzy.c
     mru.c
+    yank.c
     str_pool.c
     )
 

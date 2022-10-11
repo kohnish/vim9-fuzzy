@@ -9,6 +9,7 @@ var g_root_dir = ""
 var g_list_cmd = ""
 var g_current_line = ""
 var g_mru_path = ""
+var g_yank_path = ""
 var g_orig_win = -1
 const g_script_dir = expand('<script>:p:h')
 
@@ -120,12 +121,20 @@ def InitWindow(mode: string): void
         g_mru_path = g_script_dir .. "/../mru"
     endif
 
+    if exists('g:vim9_fuzzy_yank_path')
+        g_yank_path = g:vim9_fuzzy_yank_path
+    else
+        g_yank_path = g_script_dir .. "/../yank"
+    endif
+
     if mode == "file"
         job_handler.WriteToChannel({"cmd": "init_file", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
     elseif mode == "path"
         job_handler.WriteToChannel({"cmd": "init_path", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
     elseif mode == "mru"
         job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": g_mru_path})
+    elseif mode == "yank"
+        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
     endif
 
     redraw
@@ -330,7 +339,16 @@ def BlockInput(mode: string): void
                 CloseWindow()
                 break
             endif
+
             var line = getline(".")
+
+            # On yank mode, we get random strings
+            if mode == "yank"
+                system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", line)
+                CloseWindow()
+                return
+            endif
+
             var file_full_path = g_root_dir .. "/" .. line
             if filereadable(g_current_line)
                 file_full_path = g_current_line
@@ -356,12 +374,16 @@ def BlockInput(mode: string): void
     endwhile
 enddef
 
-export def StartWindow(mode: string): void
-    g_orig_win = win_getid()
+def InitProcess(): void
     if !g_initialised
         job_handler.StartFinderProcess()
         g_initialised = true
     endif
+enddef
+
+export def StartWindow(mode: string): void
+    g_orig_win = win_getid()
+    InitProcess()
     InitWindow(mode)
     try
         BlockInput(mode)
@@ -369,3 +391,22 @@ export def StartWindow(mode: string): void
         CloseWindow()
     endtry
 enddef
+
+def AppendYankHist(contents: list<any>): void
+    if exists('g:vim9_fuzzy_yank_path')
+        g_yank_path = g:vim9_fuzzy_yank_path
+    else
+        g_yank_path = g_script_dir .. "/../yank"
+    endif
+
+    InitProcess()
+    job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
+    if len(contents[0]) > 1 || len(contents) > 1
+        var yank_msg = {"cmd": "write_yank", "yank_path": g_yank_path, "value": contents[0] }
+        job_handler.WriteToChannel(yank_msg)
+    endif
+enddef
+augroup Vim9FuzzyYank
+    autocmd!
+    autocmd TextYankPost * AppendYankHist(v:event.regcontents)
+augroup END
