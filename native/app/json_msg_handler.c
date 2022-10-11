@@ -111,19 +111,24 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         write_yank(yank_path, value);
     } else if (strcmp(cmd, "mru") == 0) {
         queue_mru_search(loop, value, mru_path);
+    } else if (strcmp(cmd, "yank") == 0) {
+        queue_yank_search(loop, value, yank_path);
     }
 }
 
 void init_handlers(void) {
     init_file_mutex();
     init_mru_mutex();
+    init_yank_mutex();
     init_cancel_mutex();
 }
 
 void deinit_handlers(void) {
     deinit_file();
     deinit_mru();
+    deinit_yank();
     deinit_file_mutex();
     deinit_mru_mutex();
+    deinit_yank_mutex();
     deinit_cancel_mutex();
 }

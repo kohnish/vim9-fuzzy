@@ -63,8 +63,8 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
             unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
             (*file_info)[line_counter].file_path = str(str_pool, (char *)orig_line);
             free(orig_line);
-            // (*file_info)[line_counter].file_name = get_file_name(key_buf, str_pool);
-            // (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
+            (*file_info)[line_counter].file_name = (*file_info)[line_counter].file_path;
+            (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
             memset(key_buf, 0, PATH_MAX);
             key_counter = 0;
         } else if (c == '\n') {

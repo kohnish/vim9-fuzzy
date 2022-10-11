@@ -173,6 +173,14 @@ def SendCharMsg(mode: string, msg: string): void
             var msg2send = {"cmd": "mru", "value": msg, "mru_path": g_mru_path}
             job_handler.WriteToChannel(msg2send)
         endif
+    elseif mode == "yank"
+        if len(msg) == 0
+            var msg2send = {"cmd": "init_yank", "yank_path": g_yank_path}
+            job_handler.WriteToChannel(msg2send)
+        else
+            var msg2send = {"cmd": "yank", "value": msg, "yank_path": g_yank_path}
+            job_handler.WriteToChannel(msg2send)
+        endif
     endif
 enddef
 
@@ -406,7 +414,10 @@ def Osc52YankHist(contents: list<any>): void
         job_handler.WriteToChannel(yank_msg)
     endif
 enddef
-augroup Vim9FuzzyYank
-    autocmd!
-    autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
-augroup END
+
+if g:vim9_fuzzy_yank_enabled
+    augroup Vim9FuzzyYank
+        autocmd!
+        autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
+    augroup END
+endif
