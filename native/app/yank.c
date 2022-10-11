@@ -122,9 +122,8 @@ size_t write_yank(const char *yank_path, const char *path) {
         file_info[yank_entries_num].yank_score = time(NULL);
         file_info[yank_entries_num].file_path = str(&pool, path);
         yank_entries_num++;
-    } else {
-        qsort(file_info, yank_entries_num, sizeof(file_info_t), yank_score_cmp);
     }
+    qsort(file_info, yank_entries_num, sizeof(file_info_t), yank_score_cmp);
 
     // For writing file from scratch
     FILE *wfp = fopen(yank_path, "w");
