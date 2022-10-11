@@ -114,13 +114,13 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     }
 }
 
-void init_handlers() {
+void init_handlers(void) {
     init_file_mutex();
     init_mru_mutex();
     init_cancel_mutex();
 }
 
-void deinit_handlers() {
+void deinit_handlers(void) {
     deinit_file();
     deinit_mru();
     deinit_file_mutex();

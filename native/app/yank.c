@@ -1,4 +1,5 @@
 #include "yank.h"
+#include "b64.h"
 #include "fuzzy.h"
 #include "json_msg_handler.h"
 #include "search_helper.h"
@@ -56,8 +57,12 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                 current_size = current_size * 2;
                 *file_info = realloc(*file_info, sizeof(file_info_t) * current_size);
             }
-            key_buf[strlen(key_buf) + 1] = '\0';
-            (*file_info)[line_counter].file_path = str(str_pool, key_buf);
+            size_t len = strlen(key_buf) + 1;
+            key_buf[len] = '\0';
+            size_t b_len;
+            unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
+            (*file_info)[line_counter].file_path = str(str_pool, (char *)orig_line);
+            free(orig_line);
             // (*file_info)[line_counter].file_name = get_file_name(key_buf, str_pool);
             // (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
             memset(key_buf, 0, PATH_MAX);
@@ -129,7 +134,10 @@ size_t write_yank(const char *yank_path, const char *path) {
         return 0;
     }
     for (size_t i = 0; i < yank_entries_num; i++) {
-        fprintf(wfp, "%s:%zu\n", file_info[i].file_path, file_info[i].yank_score);
+        size_t l;
+        unsigned char *base64_yank = base64_encode((unsigned char *)file_info[i].file_path, strlen(file_info[i].file_path), &l);
+        fprintf(wfp, "%s:%zu\n", (const char *)base64_yank, file_info[i].yank_score);
+        free(base64_yank);
     }
     free(file_info);
     deinit_str_pool(pool);
