@@ -133,9 +133,11 @@ size_t write_yank(const char *yank_path, const char *path) {
         return 0;
     }
     for (size_t i = 0; i < yank_entries_num; i++) {
-        size_t l;
+        size_t l = 0;
         unsigned char *base64_yank = base64_encode((unsigned char *)file_info[i].file_path, strlen(file_info[i].file_path), &l);
-        fprintf(wfp, "%s:%zu\n", (const char *)base64_yank, file_info[i].yank_score);
+        if (l > 0) {
+            fprintf(wfp, "%s:%zu\n", (const char *)base64_yank, file_info[i].yank_score);
+        }
         free(base64_yank);
     }
     free(file_info);
