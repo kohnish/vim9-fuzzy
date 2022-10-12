@@ -415,7 +415,7 @@ def Osc52YankHist(contents: list<any>): void
     endif
 enddef
 
-if g:vim9_fuzzy_yank_enabled
+if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
     augroup Vim9FuzzyYank
         autocmd!
         autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
