@@ -57,7 +57,7 @@ static size_t load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_i
                 *file_info = realloc(*file_info, sizeof(file_info_t) * current_size);
             }
             key_buf[strlen(key_buf) + 1] = '\0';
-            (*file_info)[line_counter].file_path = str(str_pool, key_buf);
+            (*file_info)[line_counter].file_path = pool_str(str_pool, key_buf);
             (*file_info)[line_counter].file_name = get_file_name(key_buf, str_pool);
             (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
             memset(key_buf, 0, PATH_MAX);
@@ -115,7 +115,7 @@ size_t write_mru(const char *mru_path, const char *path) {
     if (found == 0) {
         file_info = realloc(file_info, sizeof(file_info_t) * (mru_entries_num + 1));
         file_info[mru_entries_num].mru_score = 1;
-        file_info[mru_entries_num].file_path = str(&pool, path);
+        file_info[mru_entries_num].file_path = pool_str(&pool, path);
         mru_entries_num++;
     }
     qsort(file_info, mru_entries_num, sizeof(file_info_t), mru_score_cmp);

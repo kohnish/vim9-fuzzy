@@ -15,9 +15,12 @@ str_pool_t **init_str_pool(size_t sz) {
     return p_pool;
 }
 
-char *str(str_pool_t ***pool_addr, const char *s) {
+char *pool_str_with_len(str_pool_t ***pool_addr, const char *s, size_t len) {
     str_pool_t **pool = *pool_addr;
-    size_t s_len = strlen(s) + 1;
+    size_t s_len = len + 1;
+    if (len == 0) {
+        s_len = strlen(s) + 1;
+    }
     size_t idx = pool[0]->idx;
     size_t new_idx = idx;
     size_t sz = pool[0]->sz;

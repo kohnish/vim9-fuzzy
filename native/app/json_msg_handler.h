@@ -21,5 +21,6 @@ void deinit_handlers(void);
 void handle_json_msg(uv_loop_t *loop, const char *json_str);
 void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size);
 void init_handlers(void);
+char *json_escape(const char *json, size_t len, size_t *result_len);
 
 #endif /* JSON_MSG_HANDLER_H */

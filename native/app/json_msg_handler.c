@@ -16,6 +16,36 @@
 #define MAX_RESPONSE_SIZE (MAX_RESPONSE_LINES * PATH_MAX)
 #define MAX_REAL_RESPONSE_SIZE (MAX_RESPONSE_SIZE * 2)
 
+
+char *json_escape(const char *json, size_t len, size_t *result_len) {
+    char *buf = malloc(len * 2);
+    size_t counter = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (json[i] == '\n') {
+            buf[counter] = '\\';
+            buf[++counter] = 'n';
+        } else if (json[i] == '\r') {
+            buf[counter] = '\\';
+            buf[++counter] = 'r';
+        } else if (json[i] == '\t') {
+            buf[counter] = '\\';
+            buf[++counter] = 't';
+        } else if (json[i] == '"') {
+            buf[counter] = '\\';
+            buf[++counter] = '"';
+        } else if (json[i] == '\\') {
+            buf[counter] = '\\';
+            buf[++counter] = '\\';
+        } else {
+            buf[counter] = json[i];
+        }
+        counter++;
+    }
+    buf[counter] = '\0';
+    *result_len = counter;
+    return buf;
+}
+
 static int create_res_json(const char *cmd, file_info_t *file_info, size_t size, char *buf) {
     if (size == 0) {
         sprintf(buf, "{\"cmd\": \"%s\", \"result\": []}\n", cmd);

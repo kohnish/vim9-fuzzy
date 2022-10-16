@@ -11,7 +11,7 @@ def HandleStdout(channel: channel, msg: string): void
         window_handler.PrintResult(json_msg)
     catch
         ## Solve this issue...
-        #echom msg
+        # echom msg
     endtry
 enddef
 
