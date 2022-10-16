@@ -352,9 +352,18 @@ def BlockInput(mode: string): void
 
             # On yank mode, we get random strings
             if mode == "yank"
-                execute ':normal! yy'
-                CloseWindow()
-                return
+                if input == "\<CR>"
+                    execute "normal! yy"
+                    var for_paste = getline('.')
+                    CloseWindow()
+                    execute "normal! o"
+                    setline(line('.'), for_paste)
+                    return
+                elseif input == "\<C-t>"
+                    execute "normal! yy"
+                    CloseWindow()
+                    return
+                endif
             endif
 
             var file_full_path = g_root_dir .. "/" .. line
