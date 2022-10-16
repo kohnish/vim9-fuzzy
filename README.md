@@ -7,15 +7,14 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 ToDo
 ----
  - Support multi-lines with yank manager
- - Improve fuzzy algorithm and colour matching characters properly
  - Reduce hard coding
+ - Remove git and rg executables dependencies
  - Add backtrace
  - Add tests
- - Remove git and rg executables dependencies
- - UTF-8 support
+ - Improve fuzzy algorithm
  - Allow custom keybinding
+ - UTF-8 support
  - Test on Windows
- - Make CI test
 
 Runtime requirements
 --------------------
@@ -60,9 +59,13 @@ g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 # Search by only file name.
 noremap <C-f> :Vim9FuzzyFile<CR>
 # Search by full path
-noremap <C-y> :Vim9FuzzyPath<CR>
+noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
+
+# For fuzzy yank history search
+g:vim9_fuzzy_yank_enabled = true
+noremap <C-y> :Vim9FuzzyYank<CR>
 ```
 
 Build requirements
