@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #define INITIAL_CACHE_SIZE 100
 static file_info_t *g_yank_cache;
