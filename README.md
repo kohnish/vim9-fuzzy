@@ -52,8 +52,14 @@ if len(git_root) > 0
 endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
-# Path for keeping most recently used files.(Default)
+# Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
+
+# For fuzzy yank history search
+# Enable yank hook (Default false)
+g:vim9_fuzzy_yank_enabled = true
+# The path for keeping yank histories (Defaulting here)
+g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
 
 # Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
@@ -62,9 +68,7 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
-
-# For fuzzy yank history search
-g:vim9_fuzzy_yank_enabled = true
+# Search yank histories
 noremap <C-y> :Vim9FuzzyYank<CR>
 ```
 
