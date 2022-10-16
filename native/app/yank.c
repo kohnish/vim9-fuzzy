@@ -61,8 +61,15 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
             key_buf[len] = '\0';
             size_t b_len;
             unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
-            (*file_info)[line_counter].file_path = str(str_pool, (char *)orig_line);
+            (*file_info)[line_counter].file_path = pool_str_with_len(str_pool, (char *)orig_line, b_len);
             free(orig_line);
+            // size_t b_len;
+            // unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
+            // size_t j_len;
+            // char *j = json_escape((const char *)orig_line, b_len, &j_len);
+            // (*file_info)[line_counter].file_path = pool_str(str_pool, (char *)j);
+            // free(orig_line);
+            // free(j);
             (*file_info)[line_counter].file_name = (*file_info)[line_counter].file_path;
             (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
             memset(key_buf, 0, PATH_MAX);
@@ -120,7 +127,7 @@ size_t write_yank(const char *yank_path, const char *path) {
     if (found == 0) {
         file_info = realloc(file_info, sizeof(file_info_t) * (yank_entries_num + 1));
         file_info[yank_entries_num].yank_score = time(NULL);
-        file_info[yank_entries_num].file_path = str(&pool, path);
+        file_info[yank_entries_num].file_path = pool_str(&pool, path);
         yank_entries_num++;
     }
     qsort(file_info, yank_entries_num, sizeof(file_info_t), yank_score_cmp);

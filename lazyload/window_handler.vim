@@ -408,7 +408,6 @@ def Osc52YankHist(contents: list<any>): void
     endif
 
     InitProcess()
-    job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
     if len(contents[0]) > 1 || len(contents) > 1
         var yank_msg = {"cmd": "write_yank", "yank_path": g_yank_path, "value": contents[0] }
         job_handler.WriteToChannel(yank_msg)

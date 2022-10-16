@@ -54,7 +54,7 @@ const char *get_file_name(const char *path, str_pool_t ***pool) {
             pos = 0;
         }
     }
-    return str(pool, buf);
+    return pool_str(pool, buf);
 }
 
 void deinit_file() {
@@ -81,7 +81,7 @@ static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t ini
         }
         // Remove newline character.
         path_buf[strlen(path_buf) - 1] = '\0';
-        (*file_info)[counter].file_path = str(str_pool, path_buf);
+        (*file_info)[counter].file_path = pool_str(str_pool, path_buf);
         if (no_path_trim == 1) {
             (*file_info)[counter].file_name = (*file_info)[counter].file_path;
         } else {
