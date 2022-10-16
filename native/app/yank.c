@@ -61,7 +61,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
             key_buf[len] = '\0';
             size_t b_len;
             unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
-            (*file_info)[line_counter].file_path = pool_str_with_len(str_pool, (char *)orig_line, b_len);
+            (*file_info)[line_counter].file_path = pool_str_with_len(str_pool, (char *)orig_line, b_len - 1);
             free(orig_line);
             // size_t b_len;
             // unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
