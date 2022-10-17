@@ -358,12 +358,11 @@ def BlockInput(mode: string): void
                     CloseWindow()
                     execute "normal! o"
                     setline(line('.'), for_paste)
-                    return
                 elseif input == "\<C-t>"
                     execute "normal! yy"
                     CloseWindow()
-                    return
                 endif
+                return
             endif
 
             var file_full_path = g_root_dir .. "/" .. line
