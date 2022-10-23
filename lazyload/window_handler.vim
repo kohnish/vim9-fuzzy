@@ -4,7 +4,6 @@ import "./job_handler.vim"
 
 # ToDo: stop using globals
 var g_initialised = false
-var g_search_window_name = ""
 var g_root_dir = ""
 var g_list_cmd = ""
 var g_current_line = ""
@@ -39,7 +38,11 @@ def IntToBin(n: number, fill_len: number): list<any>
 enddef
 
 export def PrintResult(json_msg: dict<any>): void
-    deletebufline(g_search_window_name, 1, "$")
+    var buf_id = bufnr("Vim9 Fuzzy")
+    if buf_id == -1
+        return
+    endif
+    deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
         clearmatches()
         highlight matched_str_colour guifg=red ctermfg=red term=bold gui=bold
@@ -51,13 +54,13 @@ export def PrintResult(json_msg: dict<any>): void
             var col_counter = 0
             for j in bin_list
                 if j == 1
-                    matchaddpos("matched_str_colour", [[line_counter, col_counter]])
+                    matchaddpos("matched_str_colour", [[line_counter, col_counter]], buf_id) 
                 endif
                 col_counter += 1
             endfor
             line_counter += 1
         endfor
-        setbufline(g_search_window_name, 1, lines)
+        setbufline(buf_id, 1, lines)
     endif
     redraw
 enddef
@@ -72,7 +75,6 @@ enddef
 
 def InitWindow(mode: string): void
     noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    g_search_window_name = bufname()
     resize 20
 
     setlocal nobuflisted
