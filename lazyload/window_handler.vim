@@ -77,6 +77,7 @@ def InitWindow(mode: string): void
     noautocmd keepalt keepjumps botright split Vim9 Fuzzy
     resize 20
 
+    setlocal statusline=\ \ Vim9\ Fuzzy
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal bufhidden=hide
