@@ -11,9 +11,11 @@ else()
         CMAKE_ARGS ${COMPILE_OPT} -DCMAKE_INSTALL_PREFIX=${uv_inst_prefix} -DLIBUV_BUILD_TESTS=OFF
         URL_HASH SHA256=e6e2ba8b4c349a4182a33370bb9be5e23c51b32efb9b9e209d0e8556b73a48da
         BUILD_BYPRODUCTS ${uv_inst_prefix}/lib/libuv_a.a
+        DOWNLOAD_EXTRACT_TIMESTAMP ON
     )
     add_library(uv STATIC IMPORTED GLOBAL)
-    set_target_properties(uv PROPERTIES IMPORTED_LOCATION ${uv_inst_prefix}/lib/libuv_a.a)
-    set_target_properties(uv PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${uv_inst_prefix}/include)
     add_dependencies(uv libuv)
+    set_target_properties(uv PROPERTIES IMPORTED_LOCATION ${uv_inst_prefix}/lib/libuv_a.a)
+    file(MAKE_DIRECTORY ${uv_inst_prefix}/include)
+    set_target_properties(uv PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${uv_inst_prefix}/include)
 endif()
