@@ -2,6 +2,7 @@ if(${USE_SYSTEM_LIBUV})
     pkg_check_modules(UV libuv REQUIRED)
     add_library(uv SHARED IMPORTED GLOBAL)
     set_target_properties(uv PROPERTIES IMPORTED_LOCATION ${pkgcfg_lib_UV_uv})
+    set_target_properties(uv PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${UV_INCLUDE_DIRS})
 else()
     ExternalProject_Add(libuv
         URL https://github.com/libuv/libuv/archive/refs/tags/v1.44.2.tar.gz
