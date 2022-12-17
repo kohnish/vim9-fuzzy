@@ -124,11 +124,11 @@ def InitWindow(mode: string): void
         g_mru_path = g_script_dir .. "/../mru"
     endif
 
-    if exists('g:vim9_fuzzy_yank_path')
-        g_yank_path = g:vim9_fuzzy_yank_path
-    else
-        g_yank_path = g_script_dir .. "/../yank"
-    endif
+    # if exists('g:vim9_fuzzy_yank_path')
+    #     g_yank_path = g:vim9_fuzzy_yank_path
+    # else
+    #     g_yank_path = g_script_dir .. "/../yank"
+    # endif
 
     if mode == "file"
         job_handler.WriteToChannel({"cmd": "init_file", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
@@ -136,8 +136,8 @@ def InitWindow(mode: string): void
         job_handler.WriteToChannel({"cmd": "init_path", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
     elseif mode == "mru"
         job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": g_mru_path})
-    elseif mode == "yank"
-        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
+    # elseif mode == "yank"
+    #     job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
     endif
 
     redraw
@@ -176,14 +176,14 @@ def SendCharMsg(mode: string, msg: string): void
             var msg2send = {"cmd": "mru", "value": msg, "mru_path": g_mru_path}
             job_handler.WriteToChannel(msg2send)
         endif
-    elseif mode == "yank"
-        if len(msg) == 0
-            var msg2send = {"cmd": "init_yank", "yank_path": g_yank_path}
-            job_handler.WriteToChannel(msg2send)
-        else
-            var msg2send = {"cmd": "yank", "value": msg, "yank_path": g_yank_path}
-            job_handler.WriteToChannel(msg2send)
-        endif
+    # elseif mode == "yank"
+    #     if len(msg) == 0
+    #         var msg2send = {"cmd": "init_yank", "yank_path": g_yank_path}
+    #         job_handler.WriteToChannel(msg2send)
+    #     else
+    #         var msg2send = {"cmd": "yank", "value": msg, "yank_path": g_yank_path}
+    #         job_handler.WriteToChannel(msg2send)
+    #     endif
     endif
 enddef
 
@@ -353,20 +353,20 @@ def BlockInput(mode: string): void
 
             var line = getline(".")
 
-            # On yank mode, we get random strings
-            if mode == "yank"
-                if input == "\<CR>"
-                    execute "normal! yy"
-                    var for_paste = getline('.')
-                    CloseWindow()
-                    execute "normal! o"
-                    setline(line('.'), for_paste)
-                elseif input == "\<C-t>"
-                    execute "normal! yy"
-                    CloseWindow()
-                endif
-                return
-            endif
+            # # On yank mode, we get random strings
+            # if mode == "yank"
+            #     if input == "\<CR>"
+            #         execute "normal! yy"
+            #         var for_paste = getline('.')
+            #         CloseWindow()
+            #         execute "normal! o"
+            #         setline(line('.'), for_paste)
+            #     elseif input == "\<C-t>"
+            #         execute "normal! yy"
+            #         CloseWindow()
+            #     endif
+            #     return
+            # endif
 
             var file_full_path = g_root_dir .. "/" .. line
             if filereadable(g_current_line)
@@ -411,23 +411,23 @@ export def StartWindow(mode: string): void
     endtry
 enddef
 
-def Osc52YankHist(contents: list<any>): void
-    if exists('g:vim9_fuzzy_yank_path')
-        g_yank_path = g:vim9_fuzzy_yank_path
-    else
-        g_yank_path = g_script_dir .. "/../yank"
-    endif
+# def Osc52YankHist(contents: list<any>): void
+#     if exists('g:vim9_fuzzy_yank_path')
+#         g_yank_path = g:vim9_fuzzy_yank_path
+#     else
+#         g_yank_path = g_script_dir .. "/../yank"
+#     endif
 
-    InitProcess()
-    if len(contents[0]) > 1 || len(contents) > 1
-        var yank_msg = {"cmd": "write_yank", "yank_path": g_yank_path, "value": contents[0] }
-        job_handler.WriteToChannel(yank_msg)
-    endif
-enddef
+#     InitProcess()
+#     if len(contents[0]) > 1 || len(contents) > 1
+#         var yank_msg = {"cmd": "write_yank", "yank_path": g_yank_path, "value": contents[0] }
+#         job_handler.WriteToChannel(yank_msg)
+#     endif
+# enddef
 
-if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
-    augroup Vim9FuzzyYank
-        autocmd!
-        autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
-    augroup END
-endif
+# if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
+#     augroup Vim9FuzzyYank
+#         autocmd!
+#         autocmd TextYankPost * Osc52YankHist(v:event.regcontents)
+#     augroup END
+# endif
