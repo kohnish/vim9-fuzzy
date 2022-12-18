@@ -1,8 +1,8 @@
 #include "json_msg_handler.h"
 #include "fuzzy.h"
 #include "mru.h"
-#include "yank.h"
 #include "search_helper.h"
+#include "yank.h"
 #include <jsmn.h>
 #include <limits.h>
 #include <stdio.h>
@@ -15,7 +15,6 @@
 #define MAX_JSON_ELM_SIZE PATH_MAX
 #define MAX_RESPONSE_SIZE (MAX_RESPONSE_LINES * PATH_MAX)
 #define MAX_REAL_RESPONSE_SIZE (MAX_RESPONSE_SIZE * 2)
-
 
 char *json_escape(const char *json, size_t len, size_t *result_len) {
     char *buf = malloc(len * 2);
