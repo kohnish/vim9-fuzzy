@@ -27,12 +27,12 @@ typedef struct file_info_t {
 
 void free_file_info(file_info_t **f);
 void free_str(char **s);
-void deinit_file();
+void deinit_file(void);
 const char *get_file_name(const char *path, str_pool_t ***pool);
 int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd);
-int is_file_search_ongoing();
-void init_file_mutex();
-void deinit_file_mutex();
+int is_file_search_ongoing(void);
+void init_file_mutex(void);
+void deinit_file_mutex(void);
 
 #ifdef __cplusplus
 }

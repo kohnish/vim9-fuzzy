@@ -22,15 +22,15 @@ static void toggle_file_init(int val) {
     uv_mutex_unlock(&file_init_mutex);
 }
 
-int is_file_search_ongoing() {
+int is_file_search_ongoing(void) {
     return file_init;
 }
 
-void init_file_mutex() {
+void init_file_mutex(void) {
     uv_mutex_init(&file_init_mutex);
 }
 
-void deinit_file_mutex() {
+void deinit_file_mutex(void) {
     uv_mutex_destroy(&file_init_mutex);
 }
 
@@ -57,7 +57,7 @@ const char *get_file_name(const char *path, str_pool_t ***pool) {
     return pool_str(pool, buf);
 }
 
-void deinit_file() {
+void deinit_file(void) {
     if (g_f_cache != NULL) {
         free(g_f_cache);
     }

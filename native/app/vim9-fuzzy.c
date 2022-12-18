@@ -39,7 +39,7 @@ static void on_signal(uv_signal_t *handle, int signum) {
     }
 }
 
-int main() {
+int main(void) {
     static uv_loop_t loop;
     static uv_tty_t tty_handle;
     static uv_signal_t sig_handle;

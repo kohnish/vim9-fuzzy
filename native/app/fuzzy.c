@@ -332,11 +332,11 @@ static void sanitize_word(const char *word, char *buf) {
 static uv_mutex_t cancel_mutex;
 static int cancel = 0;
 
-void init_cancel_mutex() {
+void init_cancel_mutex(void) {
     uv_mutex_init(&cancel_mutex);
 }
 
-void deinit_cancel_mutex() {
+void deinit_cancel_mutex(void) {
     uv_mutex_destroy(&cancel_mutex);
 }
 
