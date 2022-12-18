@@ -1,12 +1,12 @@
 #define _GNU_SOURCE /* Required for strcasestr. */
+#include "fuzzy.h"
+#include "json_msg_handler.h"
+#include "search_helper.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include "fuzzy.h"
-#include "json_msg_handler.h"
-#include "search_helper.h"
 
 #undef MAX
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -110,7 +110,6 @@ static int32_t fuzzy_match_recurse(const char *restrict pattern, const char *res
     }
 }
 
-
 /*
  * Returns score if each character in pattern is found sequentially within str.
  * Returns INT32_MIN otherwise.
@@ -118,7 +117,7 @@ static int32_t fuzzy_match_recurse(const char *restrict pattern, const char *res
 static int32_t fuzzy_match(search_query_t *query) {
     const int unmatched_letter_penalty = -1;
     const size_t slen = strlen(query->search_word);
-    
+
     query->result.score = 100;
 
     if (*query->line == '\0') {
@@ -193,4 +192,3 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
 
     return matched_len;
 }
-

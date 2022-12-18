@@ -12,8 +12,8 @@ extern "C" {
 #define MAX_FILENAME_LEN PATH_MAX
 #define ALIGN32 32
 
-#define AUTO_FREE_FILE_INFO __attribute__((__cleanup__(free_file_info))) 
-#define AUTO_FREE_STR __attribute__((__cleanup__(free_str))) 
+#define AUTO_FREE_FILE_INFO __attribute__((__cleanup__(free_file_info)))
+#define AUTO_FREE_STR __attribute__((__cleanup__(free_str)))
 
 typedef struct file_info_t {
     const char *file_path;
