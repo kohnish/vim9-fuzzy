@@ -138,7 +138,7 @@ size_t write_mru(const char *mru_path, const char *path) {
     return mru_entries_num;
 }
 
-void deinit_mru() {
+void deinit_mru(void) {
     if (g_mru_cache != NULL) {
         free(g_mru_cache);
         g_mru_cache = NULL;
