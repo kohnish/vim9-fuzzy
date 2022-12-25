@@ -41,6 +41,8 @@ chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 ```
 Configuration
 ```vim
+## Required configurations
+
 # Enable vim9-fuzzy
 packadd! vim9-fuzzy
 
@@ -52,15 +54,6 @@ if len(git_root) > 0
 endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
-# Path for keeping most recently used files (Default here)
-g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
-
-# For fuzzy yank history search
-# Enable yank hook (Default false)
-g:vim9_fuzzy_yank_enabled = true
-# The path for keeping yank histories (Defaulting here)
-g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
-
 # Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
 noremap <C-f> :Vim9FuzzyFile<CR>
@@ -68,8 +61,24 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
-# Search yank histories
+# Search yank histories (not working)
 noremap <C-y> :Vim9FuzzyYank<CR>
+
+
+## Optional settings
+
+# To stop using git command for list files.(doesn't work for windows)
+g:vim9_fuzzy_use_only_rg = true
+
+# Path for keeping most recently used files (Default here)
+g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
+
+# For fuzzy yank history search (not working)
+# Enable yank hook (Default false)
+g:vim9_fuzzy_yank_enabled = true
+# The path for keeping yank histories (Defaulting here)
+g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
+
 ```
 
 Build requirements

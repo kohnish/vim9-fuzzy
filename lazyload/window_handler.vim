@@ -112,10 +112,19 @@ def InitWindow(mode: string): void
         rg_cmd = rg_cmd .. ".exe"
     endif
     var git_dir = g_root_dir .. "/.git"
-    if filereadable(git_dir) || isdirectory(git_dir)
-        g_list_cmd = git_cmd .. " ls-files " .. g_root_dir .. " --full-name"
+    if exists('g:vim9_fuzzy_use_only_rg') && g:vim9_fuzzy_use_only_rg
+        if filereadable(git_dir) || isdirectory(git_dir)
+            var trim_len = len(g_root_dir) + 2
+            g_list_cmd = rg_cmd .. " --files " .. g_root_dir .. " | cut -c " .. trim_len .. "-" 
+        else
+            g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
+        endif
     else
-        g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
+        if filereadable(git_dir) || isdirectory(git_dir)
+            g_list_cmd = git_cmd .. " ls-files " .. g_root_dir .. " --full-name"
+        else
+            g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
+        endif
     endif
 
     if exists('g:vim9_fuzzy_mru_path')
