@@ -115,7 +115,7 @@ def InitWindow(mode: string): void
     if exists('g:vim9_fuzzy_use_only_rg') && g:vim9_fuzzy_use_only_rg
         if filereadable(git_dir) || isdirectory(git_dir)
             var trim_len = len(g_root_dir) + 2
-            g_list_cmd = rg_cmd .. " --files --hidden " .. g_root_dir .. " | cut -c " .. trim_len .. "-" 
+            g_list_cmd = rg_cmd .. " --files --hidden -g!.git " .. g_root_dir .. " | cut -c " .. trim_len .. "-" 
         else
             g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
         endif
