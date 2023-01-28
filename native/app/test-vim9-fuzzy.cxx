@@ -5,9 +5,17 @@
 #include "vim9_fuzzy_env.h"
 #include <gtest/gtest.h>
 #include <memory>
+#include <optional>
 
+namespace ttt {
+void avoid_tt() {
+    throw std::runtime_error("e");
+}
+}
 // ToDo: Fix this
 TEST(fuzzy, start_fuzzy_response) {
+    ttt::avoid_tt();
+
     size_t l;
     char const *const c =
         "78]: Starting systemd-tmpfiles-clean.service - Cleanup of User's Tempor>Oct 11 18:49:50 shuttle-fedora systemd[678]: Finished systemd-tmpfiles-clean.service - Cleanup of User's Tempor> Oct 11 18:59:40 shuttle-fedora systemd[1]: Starting systemd-tmpfiles-clean.service - Cleanup of "
