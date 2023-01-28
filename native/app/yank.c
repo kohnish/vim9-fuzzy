@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #define INITIAL_CACHE_SIZE 100
+#define RESULT_LEN_MAX (PATH_MAX * 2)
 static file_info_t *g_yank_cache;
 static size_t g_yank_len;
 static str_pool_t **g_str_pool;
@@ -57,8 +58,8 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                 current_size = current_size * 2;
                 *file_info = realloc(*file_info, sizeof(file_info_t) * current_size);
             }
-            char path[PATH_MAX] = { 0 };
-            snprintf(path, PATH_MAX, "%s/%s", yank_dir, dir_entry->d_name);
+            char path[RESULT_LEN_MAX] = { 0 };
+            snprintf(path, RESULT_LEN_MAX, "%s/%s", yank_dir, dir_entry->d_name);
             if (dir_entry->d_type == DT_REG) {
                 FILE *yank_fp = fopen(path, "r");
                 if (yank_fp) {
@@ -69,8 +70,8 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                     char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
                     escaped_line[escaped_len - 2] = '\0';
                     // yank_line[yank_line_len] = '\0';
-                    char result_line[1000] = { 0 };
-                    int result_line_len = snprintf(result_line, 1000, "%s| %s", dir_entry->d_name, escaped_line);
+                    char result_line[RESULT_LEN_MAX] = { 0 };
+                    int result_line_len = snprintf(result_line, RESULT_LEN_MAX, "%s| %s", dir_entry->d_name, escaped_line);
                     free(escaped_line);
                     // printf("%s\n", result_line);
                     if (result_line_len > 0) {
