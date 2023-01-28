@@ -66,6 +66,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                     char *yank_line = NULL;
                     size_t yank_line_len;
                     getline(&yank_line, &yank_line_len, yank_fp);
+                    yank_line[--yank_line_len] = '\0';
                     size_t escaped_len;
                     char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
                     escaped_line[escaped_len - 2] = '\0';
@@ -106,10 +107,6 @@ int init_yank(const char *yank_path) {
     deinit_yank();
     g_str_pool = init_str_pool(10240);
     int ret = -1;
-    if (access(yank_path, F_OK) != 0) {
-        send_res_from_file_info("yank", NULL, 0);
-        return ret;
-    }
     ret = load_yank_to_file_info(&g_str_pool, &g_yank_cache, &g_yank_len, yank_path);
     if (ret > 0) {
         send_res_from_file_info("yank", g_yank_cache, g_yank_len);
