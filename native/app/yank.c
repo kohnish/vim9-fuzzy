@@ -5,11 +5,13 @@
 #include "search_helper.h"
 #include "str_pool.h"
 #include <ctype.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -39,121 +41,53 @@ void deinit_yank_mutex(void) {
     uv_mutex_destroy(&yank_init_mutex);
 }
 
-static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, FILE *fp) {
+static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, const char *yank_dir) {
     static size_t current_size = INITIAL_CACHE_SIZE;
     if (*file_info == NULL) {
         size_t initial_sz = sizeof(file_info_t) * current_size;
         *file_info = malloc(initial_sz);
         memset(*file_info, 0, initial_sz);
     }
-    int current_mode = 0;
-    int key_counter = 0;
     size_t line_counter = 0;
-    size_t value_counter = 0;
-    char key_buf[PATH_MAX] = {0};
-    char val_buf[PATH_MAX] = {0};
-    while (1) {
-        char c = (char)fgetc(fp);
-        if (c == ':') {
-            current_mode = 1;
+    DIR *dir = opendir(yank_dir);
+    if (dir) {
+        struct dirent *dir_entry;
+        while ((dir_entry = readdir(dir)) != NULL) {
             if (line_counter >= current_size) {
                 current_size = current_size * 2;
                 *file_info = realloc(*file_info, sizeof(file_info_t) * current_size);
             }
-            size_t len = strlen(key_buf) + 1;
-            key_buf[len] = '\0';
-            size_t b_len;
-            unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
-            (*file_info)[line_counter].file_path = pool_str_with_len(str_pool, (char *)orig_line, b_len - 1);
-            free(orig_line);
-            // size_t b_len;
-            // unsigned char *orig_line = base64_decode((unsigned char *)key_buf, len, &b_len);
-            // size_t j_len;
-            // char *j = json_escape((const char *)orig_line, b_len, &j_len);
-            // (*file_info)[line_counter].file_path = pool_str(str_pool, (char *)j);
-            // free(orig_line);
-            // free(j);
-            (*file_info)[line_counter].file_name = (*file_info)[line_counter].file_path;
-            (*file_info)[line_counter].f_len = strlen((*file_info)[line_counter].file_name);
-            memset(key_buf, 0, PATH_MAX);
-            key_counter = 0;
-        } else if (c == '\n') {
-            current_mode = 0;
-            (*file_info)[line_counter].yank_score = atoi(val_buf);
-            memset(val_buf, 0, PATH_MAX);
-            line_counter++;
-            value_counter = 0;
-        } else if (c == EOF) {
-            break;
-        } else {
-            if (current_mode == 0) {
-                key_buf[key_counter] = c;
-                key_counter++;
-            } else {
-                val_buf[value_counter] = c;
-                value_counter++;
+            char path[PATH_MAX] = { 0 };
+            snprintf(path, PATH_MAX, "%s/%s", yank_dir, dir_entry->d_name);
+            if (dir_entry->d_type == DT_REG) {
+                FILE *yank_fp = fopen(path, "r");
+                if (yank_fp) {
+                    char *yank_line = NULL;
+                    size_t yank_line_len;
+                    getline(&yank_line, &yank_line_len, yank_fp);
+                    size_t escaped_len;
+                    char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
+                    escaped_line[escaped_len - 2] = '\0';
+                    // yank_line[yank_line_len] = '\0';
+                    char result_line[1000] = { 0 };
+                    int result_line_len = snprintf(result_line, 1000, "%s| %s", dir_entry->d_name, escaped_line);
+                    free(escaped_line);
+                    // printf("%s\n", result_line);
+                    if (result_line_len > 0) {
+                        (*file_info)[line_counter].file_path = pool_str(str_pool, result_line);
+                        (*file_info)[line_counter].file_name = pool_str(str_pool, result_line);
+                        (*file_info)[line_counter].f_len = result_line_len;
+                    }
+                    free(yank_line);
+                    fclose(yank_fp);
+                    line_counter++;
+                }
             }
         }
+        closedir(dir);
     }
     *result_len = line_counter;
     return line_counter;
-}
-
-static int yank_score_cmp(const void *s1, const void *s2) {
-    int v1 = ((file_info_t *)s1)->yank_score;
-    int v2 = ((file_info_t *)s2)->yank_score;
-
-    return v1 == v2 ? 0 : v1 > v2 ? -1 : 1;
-}
-
-size_t write_yank(const char *yank_path, const char *path) {
-    str_pool_t **pool = init_str_pool(10240);
-    file_info_t *file_info = NULL;
-    size_t yank_entries_num = 0;
-    int found = 0;
-    // not for appending but for atomic create and read
-    FILE *fp = fopen(yank_path, "a+");
-    if (fp == NULL) {
-        deinit_str_pool(pool);
-        return 0;
-    }
-    fseek(fp, 0, SEEK_SET);
-    load_yank_to_file_info(&pool, &file_info, &yank_entries_num, fp);
-    fclose(fp);
-
-    for (size_t i = 0; i < yank_entries_num; i++) {
-        if (strcmp(file_info[i].file_path, path) == 0) {
-            file_info[i].yank_score = time(NULL);
-            found = 1;
-        }
-    }
-    if (found == 0) {
-        file_info = realloc(file_info, sizeof(file_info_t) * (yank_entries_num + 1));
-        file_info[yank_entries_num].yank_score = time(NULL);
-        file_info[yank_entries_num].file_path = pool_str(&pool, path);
-        yank_entries_num++;
-    }
-    qsort(file_info, yank_entries_num, sizeof(file_info_t), yank_score_cmp);
-
-    // For writing file from scratch
-    FILE *wfp = fopen(yank_path, "w");
-    if (wfp == NULL) {
-        free(file_info);
-        deinit_str_pool(pool);
-        return 0;
-    }
-    for (size_t i = 0; i < yank_entries_num; i++) {
-        size_t l = 0;
-        unsigned char *base64_yank = base64_encode((unsigned char *)file_info[i].file_path, strlen(file_info[i].file_path), &l);
-        if (l > 0) {
-            fprintf(wfp, "%s:%zu\n", (const char *)base64_yank, file_info[i].yank_score);
-        }
-        free(base64_yank);
-    }
-    free(file_info);
-    deinit_str_pool(pool);
-    fclose(wfp);
-    return yank_entries_num;
 }
 
 void deinit_yank(void) {
@@ -175,13 +109,9 @@ int init_yank(const char *yank_path) {
         send_res_from_file_info("yank", NULL, 0);
         return ret;
     }
-    FILE *fp = fopen(yank_path, "r");
-    if (fp != NULL) {
-        ret = load_yank_to_file_info(&g_str_pool, &g_yank_cache, &g_yank_len, fp);
-        if (ret > 0) {
-            send_res_from_file_info("yank", g_yank_cache, g_yank_len);
-        }
-        fclose(fp);
+    ret = load_yank_to_file_info(&g_str_pool, &g_yank_cache, &g_yank_len, yank_path);
+    if (ret > 0) {
+        send_res_from_file_info("yank", g_yank_cache, g_yank_len);
     }
     return ret;
 }

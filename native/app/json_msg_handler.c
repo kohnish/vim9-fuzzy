@@ -136,8 +136,6 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         write_mru(mru_path, value);
     } else if (strcmp(cmd, "init_yank") == 0) {
         queue_yank_search(loop, "", yank_path);
-    } else if (strcmp(cmd, "write_yank") == 0) {
-        write_yank(yank_path, value);
     } else if (strcmp(cmd, "mru") == 0) {
         queue_mru_search(loop, value, mru_path);
     } else if (strcmp(cmd, "yank") == 0) {
