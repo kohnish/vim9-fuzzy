@@ -42,6 +42,13 @@ void deinit_yank_mutex(void) {
     uv_mutex_destroy(&yank_init_mutex);
 }
 
+static int yank_score_cmp(const void *s1, const void *s2) {
+    int v1 = ((file_info_t *)s1)->yank_score;
+    int v2 = ((file_info_t *)s2)->yank_score;
+
+    return v1 == v2 ? 0 : v1 > v2 ? -1 : 1;
+}
+
 static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, const char *yank_dir) {
     static size_t current_size = INITIAL_CACHE_SIZE;
     if (*file_info == NULL) {
@@ -63,10 +70,18 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
             if (dir_entry->d_type == DT_REG) {
                 FILE *yank_fp = fopen(path, "r");
                 if (yank_fp) {
+                    int yank_fd = fileno(yank_fp);
+                    struct stat st;
+                    fstat(yank_fd, &st);
+                    long mtime = st.st_mtime;
                     char *yank_line = NULL;
                     size_t yank_line_len;
                     getline(&yank_line, &yank_line_len, yank_fp);
                     yank_line[--yank_line_len] = '\0';
+                    if (yank_line_len > 200) {
+                        yank_line[200] = '\0';
+                        yank_line_len = 200;
+                    }
                     size_t escaped_len;
                     char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
                     escaped_line[escaped_len - 2] = '\0';
@@ -79,6 +94,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                         (*file_info)[line_counter].file_path = pool_str(str_pool, result_line);
                         (*file_info)[line_counter].file_name = pool_str(str_pool, result_line);
                         (*file_info)[line_counter].f_len = result_line_len;
+                        (*file_info)[line_counter].yank_score = mtime;
                     }
                     free(yank_line);
                     fclose(yank_fp);
@@ -88,6 +104,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
         }
         closedir(dir);
     }
+    qsort(*file_info, line_counter - 1, sizeof(file_info_t), yank_score_cmp);
     *result_len = line_counter;
     return line_counter;
 }
