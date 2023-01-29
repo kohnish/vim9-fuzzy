@@ -6,7 +6,6 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 
 ToDo
 ----
- - Support multi-lines with yank manager
  - Reduce hard coding
  - Remove git and rg executables dependencies
  - Add backtrace
@@ -61,7 +60,7 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
-# Search yank histories (not working)
+# Search yank histories
 noremap <C-y> :Vim9FuzzyYank<CR>
 
 
@@ -73,7 +72,7 @@ g:vim9_fuzzy_use_only_rg = true
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
-# For fuzzy yank history search (not working)
+# For fuzzy yank history search
 # Enable yank hook (Default false)
 g:vim9_fuzzy_yank_enabled = true
 # The path for keeping yank histories (Defaulting here)
