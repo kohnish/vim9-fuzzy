@@ -1,5 +1,4 @@
 #include "yank.h"
-#include "b64.h"
 #include "fuzzy.h"
 #include "json_msg_handler.h"
 #include "search_helper.h"

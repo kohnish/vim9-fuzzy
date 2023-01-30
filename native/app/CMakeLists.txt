@@ -5,7 +5,6 @@ set(src
     json_msg_handler.c
     search_helper.c
     fuzzy.c
-    b64.c
     mru.c
     yank.c
     str_pool.c
