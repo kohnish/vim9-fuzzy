@@ -42,6 +42,7 @@ if(DEFINED SANITIZE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
     endif()
 endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
 
 if(${BUILD_FULL_STATIC})
     set(USE_SYSTEM_GOOGLETEST OFF)
