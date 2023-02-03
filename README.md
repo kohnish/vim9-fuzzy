@@ -29,10 +29,10 @@ Installation:
 mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 # For Linux 
-curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.6/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy 
+curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.7/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy 
 chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
 # For Windows
-curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.6/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
+curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.7/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe
 # Or see the build section for compiling locally
 
@@ -60,11 +60,9 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
-# Search yank histories
-noremap <C-y> :Vim9FuzzyYank<CR>
 
 
-## Optional settings
+# Optional settings
 
 # To stop using git command for list files.(doesn't work for windows)
 g:vim9_fuzzy_use_only_rg = true
@@ -73,6 +71,7 @@ g:vim9_fuzzy_use_only_rg = true
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
 # For fuzzy yank history search
+noremap <C-y> :Vim9FuzzyYank<CR>
 # Enable yank hook (Default false)
 g:vim9_fuzzy_yank_enabled = true
 # The path for keeping yank histories (Defaulting here)
