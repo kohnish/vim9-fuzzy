@@ -77,18 +77,15 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                     size_t yank_line_len;
                     getline(&yank_line, &yank_line_len, yank_fp);
                     yank_line[--yank_line_len] = '\0';
-                    if (yank_line_len > 200) {
-                        yank_line[200] = '\0';
-                        yank_line_len = 200;
+                    if (yank_line_len > 150) {
+                        yank_line[150] = '\0';
+                        yank_line_len = 150;
                     }
                     size_t escaped_len;
                     char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
-                    escaped_line[escaped_len - 2] = '\0';
-                    // yank_line[yank_line_len] = '\0';
                     char result_line[RESULT_LEN_MAX] = { 0 };
                     int result_line_len = snprintf(result_line, RESULT_LEN_MAX, "%s| %s", dir_entry->d_name, escaped_line);
                     free(escaped_line);
-                    // printf("%s\n", result_line);
                     if (result_line_len > 0) {
                         (*file_info)[line_counter].file_path = pool_str(str_pool, result_line);
                         (*file_info)[line_counter].file_name = pool_str(str_pool, result_line);
