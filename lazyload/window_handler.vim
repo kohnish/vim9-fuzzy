@@ -435,7 +435,7 @@ export def Osc52YankHist(contents: list<any>): void
     endif
     var files = split(globpath(g_yank_path, '*'), '\n')
     # ToDo: make the max num configurable and stop using unix commands.
-    if len(files) > 100
+    if len(files) > 50
         system("rm -f \"`ls -1tr " .. g_yank_path .. "/* |head -n1`\"")
     endif
 enddef
