@@ -64,7 +64,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                 current_size = current_size * 2;
                 *file_info = realloc(*file_info, sizeof(file_info_t) * current_size);
             }
-            char path[RESULT_LEN_MAX] = { 0 };
+            char path[RESULT_LEN_MAX] = {0};
             snprintf(path, RESULT_LEN_MAX, "%s/%s", yank_dir, dir_entry->d_name);
             if (dir_entry->d_type == DT_REG) {
                 FILE *yank_fp = fopen(path, "r");
@@ -83,7 +83,7 @@ static size_t load_yank_to_file_info(str_pool_t ***str_pool, file_info_t **file_
                     }
                     size_t escaped_len;
                     char *escaped_line = json_escape(yank_line, yank_line_len, &escaped_len);
-                    char result_line[RESULT_LEN_MAX] = { 0 };
+                    char result_line[RESULT_LEN_MAX] = {0};
                     int result_line_len = snprintf(result_line, RESULT_LEN_MAX, "%s| %s", dir_entry->d_name, escaped_line);
                     free(escaped_line);
                     if (result_line_len > 0) {
