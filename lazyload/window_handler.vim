@@ -213,36 +213,32 @@ def PrintFakePrompt(line: string, cursor_pos: number): void
     redraw
 enddef
 
-var WIN_FOCUSED = 0
-var WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL = 1
-var WIN_NOT_FOUND_ONLY_TERMINAL = 2
-var WIN_NOT_FOUND = 3
 def FocusIfOpen(filename: string): number
-    var f_ret = WIN_NOT_FOUND
+    var ret_buf = {}
     for buf in getbufinfo()
         if buf.loaded && buf.name == filename && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
-            return WIN_FOCUSED
-        elseif &buftype == "terminal" && buf.loaded && len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
+            return -1
+        elseif getbufvar(buf.bufnr, '&buftype') != "terminal" && buf.loaded && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
-            f_ret = WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL
+            ret_buf = buf
         endif
     endfor
-    if &buftype == "terminal" && f_ret != WIN_NOT_FOUND_FOCUSED_ON_NON_TERMINAL
-        return WIN_NOT_FOUND_ONLY_TERMINAL
+    if !empty(ret_buf)
+        return ret_buf.bufnr
     endif
-    return WIN_NOT_FOUND
+    return -2
 enddef
 
 def FocusOrOpen(filename: string): void
     var f_ret = FocusIfOpen(filename)
-    if f_ret == WIN_NOT_FOUND_ONLY_TERMINAL
+    if f_ret == -2
         execute 'tabnew ' .. filename
-    elseif f_ret != WIN_FOCUSED
-        if &modified
+    elseif f_ret == -1
+    else
+        if getbufvar(f_ret, '&modified')
             execute 'vsplit ' .. filename
         else
-            win_gotoid(g_orig_win)
             execute "edit " .. filename
         endif
     endif
