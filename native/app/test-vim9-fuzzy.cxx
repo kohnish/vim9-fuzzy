@@ -4,5 +4,4 @@
 #include "vim9_fuzzy_env.h"
 #include <gtest/gtest.h>
 
-TEST(fuzzy, start_fuzzy_response) {
-}
+TEST(fuzzy, start_fuzzy_response) {}
