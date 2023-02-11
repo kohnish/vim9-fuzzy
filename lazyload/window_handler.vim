@@ -213,34 +213,31 @@ def PrintFakePrompt(line: string, cursor_pos: number): void
     redraw
 enddef
 
+const WIN_ALREADY_FOCUSED = 0
+const WIN_FOCUSED_ON_MODIFIABLE = 1
+const WIN_NOT_FOUND = 2
 def FocusIfOpen(filename: string): number
-    var ret_buf = {}
+    var f_ret = WIN_NOT_FOUND
     for buf in getbufinfo()
         if buf.loaded && buf.name == filename && len(buf.windows) > 0
             win_gotoid(buf.windows[0])
-            return -1
-        elseif getbufvar(buf.bufnr, '&buftype') != "terminal" && buf.loaded && len(buf.windows) > 0
+            return WIN_ALREADY_FOCUSED
+        elseif len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
             win_gotoid(buf.windows[0])
-            ret_buf = buf
+            if !&modified
+                f_ret = WIN_FOCUSED_ON_MODIFIABLE
+            endif
         endif
     endfor
-    if !empty(ret_buf)
-        return ret_buf.bufnr
-    endif
-    return -2
+    return f_ret
 enddef
 
 def FocusOrOpen(filename: string): void
     var f_ret = FocusIfOpen(filename)
-    if f_ret == -2
-        execute 'tabnew ' .. filename
-    elseif f_ret == -1
-    else
-        if getbufvar(f_ret, '&modified')
-            execute 'vsplit ' .. filename
-        else
-            execute "edit " .. filename
-        endif
+    if f_ret == WIN_FOCUSED_ON_MODIFIABLE
+        execute "edit " .. filename
+    elseif f_ret == WIN_NOT_FOUND
+        execute 'vsplit ' .. filename
     endif
 enddef
 
@@ -358,7 +355,6 @@ def BlockInput(mode: string): void
 
             var line = getline(".")
 
-            # # On yank mode, we get random strings
             if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
                 if mode == "yank"
                     if input == "\<CR>"
