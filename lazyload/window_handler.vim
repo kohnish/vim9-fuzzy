@@ -357,14 +357,17 @@ def BlockInput(mode: string): void
 
             if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
                 if mode == "yank"
+                    var for_paste = getline('.')
+                    var result_lines = split(for_paste, "|")
+                    var file_name = g_yank_path .. "/" .. result_lines[0]
                     if input == "\<CR>"
-                        var for_paste = getline('.')
-                        var result_lines = split(for_paste, "|")
-                        var file_name = g_yank_path .. "/" .. result_lines[0]
                         var lines_for_paste = readfile(file_name)
                         CloseWindow()
                         execute "normal! o"
                         setline(line('.'), lines_for_paste)
+                    elseif input == "\<C-t>"
+                        CloseWindow()
+                        system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(<cat " .. file_name  .. "))\" >> /dev/tty")
                     endif
                     return
                 endif
