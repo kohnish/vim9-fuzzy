@@ -360,14 +360,14 @@ def BlockInput(mode: string): void
                     var for_paste = getline('.')
                     var result_lines = split(for_paste, "|")
                     var file_name = g_yank_path .. "/" .. result_lines[0]
+                    var lines_for_paste = readfile(file_name)
                     if input == "\<CR>"
-                        var lines_for_paste = readfile(file_name)
                         CloseWindow()
                         execute "normal! o"
                         setline(line('.'), lines_for_paste)
                     elseif input == "\<C-t>"
                         CloseWindow()
-                        system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(<cat " .. file_name  .. "))\" >> /dev/tty")
+                        system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
                     endif
                     return
                 endif
