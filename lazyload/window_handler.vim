@@ -223,9 +223,11 @@ def FocusIfOpen(filename: string): number
             win_gotoid(buf.windows[0])
             return WIN_ALREADY_FOCUSED
         elseif len(buf.windows) > 0 && getbufvar(buf.bufnr, '&buftype') != "terminal"
-            win_gotoid(buf.windows[0])
-            if !&modified
-                f_ret = WIN_FOCUSED_ON_MODIFIABLE
+            if f_ret != WIN_FOCUSED_ON_MODIFIABLE
+                win_gotoid(buf.windows[0])
+                if !&modified
+                    f_ret = WIN_FOCUSED_ON_MODIFIABLE
+                endif
             endif
         endif
     endfor
