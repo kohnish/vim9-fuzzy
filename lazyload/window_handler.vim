@@ -392,11 +392,16 @@ def BlockInput(cfg: dict<any>): void
                 file_full_path = line
             endif
 
+            if !filereadable(file_full_path)
+                file_full_path = getcwd() .. "/" .. line
+            endif
+
             if filereadable(current_line)
                 file_full_path = current_line
             elseif cfg.mode == "mru"
                 file_full_path = line
             endif
+
             CloseWindow()
             if filereadable(file_full_path)
                 var mru_msg = {"cmd": "write_mru", "mru_path": cfg.persist_path, "value": file_full_path }
