@@ -387,6 +387,10 @@ def BlockInput(cfg: dict<any>): void
             endif
 
             var file_full_path = cfg.root_dir .. "/" .. line
+            if line[0] == '/' || line[0] == '.'
+                file_full_path = line
+            endif
+
             if filereadable(current_line)
                 file_full_path = current_line
             elseif cfg.mode == "mru"

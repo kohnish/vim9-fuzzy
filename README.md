@@ -65,13 +65,13 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 g:vim9fuzzy_user_list_func = true
 def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
     var git_exe = exepath("git")
-    var output = system(git_exe .. " rev-parse --show-toplevel")
     var dir = target_dir
     if dir == ""
         dir = root_dir
     endif
+    var output = system("cd " .. dir .. " && " .. git_exe .. " rev-parse --is-inside-work-tree")
     if v:shell_error == 0
-        return "cd " .. dir .. " && " .. git_exe .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
+        return git_exe .. " ls-files --full-name " .. dir .. " | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
     endif
     return "find " .. dir .. " -type f -maxdepth 2"
 enddef
