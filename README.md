@@ -76,7 +76,7 @@ def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
     if in_git_dir && !in_ignore_dir
         return git_exe .. " ls-files --full-name " .. dir .. " | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
     endif
-    return "find " .. dir .. " -type f -maxdepth 5"
+    return "find " .. dir .. " -type f -maxdepth 5 | xargs readlink -f"
 enddef
 
 # Path for keeping most recently used files (Default here)
