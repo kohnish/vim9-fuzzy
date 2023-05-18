@@ -12,6 +12,18 @@ var g_yank_path = ""
 var g_orig_win = -1
 const g_script_dir = expand('<script>:p:h')
 
+def GetListCmdStr(root_dir: string, target_dir: string): string
+    if exists('g:vim9fuzzy_user_list_func') && g:vim9fuzzy_user_list_func
+        return g:Vim9fuzzy_user_list_func(root_dir, target_dir)
+    endif
+    # Default
+    var rg_cmd = "rg"
+    if has("win64") || has("win32") || has("win16")
+        rg_cmd = rg_cmd .. ".exe"
+    endif
+    return rg_cmd .. " --files"
+enddef
+
 def IntToBin(n: number, fill_len: number): list<any>
     var bin_list = []
     var current_num = n
@@ -73,7 +85,7 @@ def InitPrompt(): void
 enddef
 
 
-def InitWindow(mode: string): void
+def InitWindow(mode: string, target_dir: string): void
     noautocmd keepalt keepjumps botright split Vim9 Fuzzy
     resize 20
 
@@ -105,27 +117,7 @@ def InitWindow(mode: string): void
         g_root_dir = getcwd()
     endif
 
-    var git_cmd = "git"
-    var rg_cmd = "rg"
-    if has("win64") || has("win32") || has("win16")
-        git_cmd = git_cmd .. ".exe"
-        rg_cmd = rg_cmd .. ".exe"
-    endif
-    var git_dir = g_root_dir .. "/.git"
-    if exists('g:vim9_fuzzy_use_only_rg') && g:vim9_fuzzy_use_only_rg
-        if filereadable(git_dir) || isdirectory(git_dir)
-            var trim_len = len(g_root_dir) + 2
-            g_list_cmd = rg_cmd .. " --files --hidden -g!*.png -g!.git " .. g_root_dir .. " | cut -c " .. trim_len .. "-" 
-        else
-            g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
-        endif
-    else
-        if filereadable(git_dir) || isdirectory(git_dir)
-            g_list_cmd = git_cmd .. " ls-files " .. g_root_dir .. " --full-name"
-        else
-            g_list_cmd = rg_cmd .. " --files --hidden --max-depth 5"
-        endif
-    endif
+    g_list_cmd = GetListCmdStr(g_root_dir, "")
 
     if exists('g:vim9_fuzzy_mru_path')
         g_mru_path = g:vim9_fuzzy_mru_path
@@ -410,7 +402,8 @@ enddef
 export def StartWindow(mode: string): void
     g_orig_win = win_getid()
     InitProcess()
-    InitWindow(mode)
+    # Not implemented yet
+    InitWindow(mode, "")
     try
         BlockInput(mode)
     catch /^Vim:Interrupt$/
