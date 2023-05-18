@@ -7,7 +7,7 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 ToDo
 ----
  - Reduce hard coding
- - Remove rg executables dependencies
+ - Remove the default rg executables dependency
  - Add backtrace
  - Add tests
  - Improve fuzzy algorithm
@@ -18,7 +18,7 @@ ToDo
 Runtime requirements
 --------------------
  - Vim with vim9 script support
- - Rg (Only for the default list command)
+ - Rg (Only for the default list command, can be overridden by Vim9fuzzy_user_list_func)
 
 Usage
 -----
@@ -64,11 +64,16 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 # Override defaut list cmd
 g:vim9fuzzy_user_list_func = true
 def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
-    var output = system("git rev-parse --show-toplevel")
-    if v:shell_error == 0
-        return "cd " .. root_dir .. " && git ls-files | egrep -v '^.*(\.png|\.jpg)$' && git clean --dry-run -d | awk '{print $3}'"
+    var git_exe = exepath("git")
+    var output = system(git_exe .. " rev-parse --show-toplevel")
+    var dir = target_dir
+    if dir == ""
+        dir = root_dir
     endif
-    return "find " .. root_dir .. " -type f -maxdepth 2"
+    if v:shell_error == 0
+        return "cd " .. dir .. " && " .. git_exe .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
+    endif
+    return "find " .. dir .. " -type f -maxdepth 2"
 enddef
 
 # Path for keeping most recently used files (Default here)
