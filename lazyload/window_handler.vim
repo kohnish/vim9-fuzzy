@@ -14,7 +14,11 @@ def GetListCmdStr(root_dir: string, target_dir: string): string
     if has("win64") || has("win32") || has("win16")
         rg_cmd = rg_cmd .. ".exe"
     endif
-    return rg_cmd .. " --files"
+    var dir = target_dir
+    if dir == ""
+        dir = root_dir
+    endif
+    return rg_cmd .. " --files " .. dir
 enddef
 
 def GetRootdir(): string
@@ -415,10 +419,15 @@ def InitProcess(): void
 enddef
 
 
-export def StartWindow(mode: string): void
+export def StartWindow(...args: list<string>): void
+    var mode = args[0]
+    var target_dir = ""
+    if len(args) > 1
+        target_dir = args[1]
+    endif
     InitProcess()
     # Target dir not implemented yet
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), "", mode)
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode)
     InitWindow(cfg)
     try
         BlockInput(cfg)

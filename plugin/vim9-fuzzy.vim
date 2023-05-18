@@ -1,10 +1,10 @@
 vim9script
 import autoload "../lazyload/window_handler.vim"
 
-command! -nargs=0 Vim9FuzzyFile window_handler.StartWindow("file")
-command! -nargs=0 Vim9FuzzyMru window_handler.StartWindow("mru")
-command! -nargs=0 Vim9FuzzyPath window_handler.StartWindow("path")
-command! -nargs=0 Vim9FuzzyYank window_handler.StartWindow("yank")
+command! -nargs=* Vim9FuzzyFile window_handler.StartWindow("file", <f-args>)
+command! -nargs=* Vim9FuzzyMru window_handler.StartWindow("mru", <f-args>)
+command! -nargs=* Vim9FuzzyPath window_handler.StartWindow("path", <f-args>)
+command! -nargs=* Vim9FuzzyYank window_handler.StartWindow("yank", <f-args>)
 
 if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
     augroup Vim9FuzzyYank
