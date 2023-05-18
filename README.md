@@ -7,7 +7,7 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 ToDo
 ----
  - Reduce hard coding
- - Remove git and rg executables dependencies
+ - Remove rg executables dependencies
  - Add backtrace
  - Add tests
  - Improve fuzzy algorithm
@@ -18,9 +18,7 @@ ToDo
 Runtime requirements
 --------------------
  - Vim with vim9 script support
- - Git
- - Linux or Mac. (Might work on Windows)
- - Rg (For non-git dir)
+ - Rg (Only for the default list command)
 
 Usage
 -----
@@ -63,9 +61,15 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 
 
 # Optional settings
-
-# To stop using git command for list files.(doesn't work for windows)
-g:vim9_fuzzy_use_only_rg = true
+# Override defaut list cmd
+g:vim9fuzzy_user_list_func = true
+def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
+    var output = system("git rev-parse --show-toplevel")
+    if v:shell_error == 0
+        return "cd " .. root_dir .. " && git ls-files | egrep -v '^.*(\.png|\.jpg)$' && git clean --dry-run -d | awk '{print $3}'"
+    endif
+    return "find " .. root_dir .. " -type f -maxdepth 2"
+enddef
 
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
