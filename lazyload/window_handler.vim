@@ -2,14 +2,7 @@ vim9script
 
 import "./job_handler.vim"
 
-# ToDo: stop using globals
 var g_initialised = false
-var g_root_dir = ""
-var g_list_cmd = ""
-var g_current_line = ""
-var g_mru_path = ""
-var g_yank_path = ""
-var g_orig_win = -1
 const g_script_dir = expand('<script>:p:h')
 
 def GetListCmdStr(root_dir: string, target_dir: string): string
@@ -22,6 +15,49 @@ def GetListCmdStr(root_dir: string, target_dir: string): string
         rg_cmd = rg_cmd .. ".exe"
     endif
     return rg_cmd .. " --files"
+enddef
+
+def GetRootdir(): string
+    var root_dir = ""
+    if exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
+        root_dir = g:vim9_fuzzy_proj_dir
+    else
+        root_dir = getcwd()
+    endif
+    return root_dir
+enddef
+
+def GetYankPath(): string
+    var persist_path = ""
+    if exists('g:vim9_fuzzy_yank_path')
+        persist_path = g:vim9_fuzzy_yank_path
+    else
+        persist_path = g_script_dir .. "/../yank"
+    endif
+    return persist_path
+enddef
+
+def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string): dict<any>
+    var persist_path = ""
+    var init_cmd_name = ""
+    if mode == "mru"
+        if exists('g:vim9_fuzzy_mru_path')
+            persist_path = g:vim9_fuzzy_mru_path
+        else
+            persist_path = persist_dir .. "/../mru"
+        endif
+    elseif mode == "yank"
+        persist_path = GetYankPath()
+    endif
+
+    # All const members
+    return {
+        "list_cmd": GetListCmdStr(root_dir, target_dir),
+        "root_dir": root_dir,
+        "target_dir": target_dir,
+        "persist_path": persist_path,
+        "mode": mode,
+    }
 enddef
 
 def IntToBin(n: number, fill_len: number): list<any>
@@ -77,15 +113,13 @@ export def PrintResult(json_msg: dict<any>): void
     redraw
 enddef
 
-
 def InitPrompt(): void
     echon "\r\r"
     echon ''
     echohl Constant | echon '>> ' | echohl NONE
 enddef
 
-
-def InitWindow(mode: string, target_dir: string): void
+def InitWindow(cfg: dict<any>): void
     noautocmd keepalt keepjumps botright split Vim9 Fuzzy
     resize 20
 
@@ -111,39 +145,20 @@ def InitWindow(mode: string, target_dir: string): void
     setlocal filetype=
 
     InitPrompt()
-    if exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
-        g_root_dir = g:vim9_fuzzy_proj_dir
-    else
-        g_root_dir = getcwd()
-    endif
 
-    g_list_cmd = GetListCmdStr(g_root_dir, "")
-
-    if exists('g:vim9_fuzzy_mru_path')
-        g_mru_path = g:vim9_fuzzy_mru_path
-    else
-        g_mru_path = g_script_dir .. "/../mru"
-    endif
-
-    if exists('g:vim9_fuzzy_yank_path')
-        g_yank_path = g:vim9_fuzzy_yank_path
-    else
-        g_yank_path = g_script_dir .. "/../yank"
-    endif
-
-    if mode == "file"
-        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
-    elseif mode == "path"
-        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": g_root_dir, "list_cmd": g_list_cmd})
-    elseif mode == "mru"
-        job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": g_mru_path})
-    elseif mode == "yank"
-        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": g_yank_path})
+    # ToDo: Remove the checks and make it generic.
+    if cfg.mode == "file"
+        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd})
+    elseif cfg.mode == "path"
+        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd})
+    elseif cfg.mode == "mru"
+        job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": cfg.persist_path})
+    elseif cfg.mode == "yank"
+        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": cfg.persist_path})
     endif
 
     redraw
 enddef
-
 
 def CloseWindow(): void
      bdelete
@@ -151,38 +166,38 @@ def CloseWindow(): void
      redraw
 enddef
 
-
-def SendCharMsg(mode: string, msg: string): void
-    if mode == "file"
+def SendCharMsg(cfg: dict<any>, msg: string): void
+    # ToDo: make it generic
+    if cfg.mode == "file"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_file", "root_dir": g_root_dir, "list_cmd": g_list_cmd}
+            var msg2send = {"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": g_root_dir, "mru_path": g_mru_path}
+            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         endif
-    elseif mode == "path"
+    elseif cfg.mode == "path"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_path", "root_dir": g_root_dir, "list_cmd": g_list_cmd}
+            var msg2send = {"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": g_root_dir, "mru_path": g_mru_path}
+            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         endif
-    elseif mode == "mru"
+    elseif cfg.mode == "mru"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_mru", "mru_path": g_mru_path}
+            var msg2send = {"cmd": "init_mru", "mru_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "mru", "value": msg, "mru_path": g_mru_path}
+            var msg2send = {"cmd": "mru", "value": msg, "mru_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         endif
-    elseif mode == "yank"
+    elseif cfg.mode == "yank"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_yank", "yank_path": g_yank_path}
+            var msg2send = {"cmd": "init_yank", "yank_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "yank", "value": msg, "yank_path": g_yank_path}
+            var msg2send = {"cmd": "yank", "value": msg, "yank_path": cfg.persist_path}
             job_handler.WriteToChannel(msg2send)
         endif
     endif
@@ -191,12 +206,12 @@ enddef
 def PrintFakePrompt(line: string, cursor_pos: number): void
     InitPrompt()
     if cursor_pos > 0
-        echohl Normal | echon g_current_line[0 : cursor_pos - 1] | echohl NONE
+        echohl Normal | echon line[0 : cursor_pos - 1] | echohl NONE
     endif
     if cursor_pos != len(line)
-        echohl Cursor | echon g_current_line[cursor_pos] | echohl NONE
+        echohl Cursor | echon line[cursor_pos] | echohl NONE
     endif
-    echohl Normal | echon g_current_line[cursor_pos + 1 : -1] | echohl NONE
+    echohl Normal | echon line[cursor_pos + 1 : -1] | echohl NONE
     if cursor_pos == len(line)
         echohl Cursor | echon ' ' | echohl NONE
     else
@@ -235,89 +250,89 @@ def FocusOrOpen(filename: string): void
     endif
 enddef
 
-def BlockInput(mode: string): void
-    g_current_line = ""
+def BlockInput(cfg: dict<any>): void
+    var current_line = ""
     var fake_cursor_position = 0
     while true
         var input = getcharstr()
         var input_num = char2nr(input)
 
         if input_num < 127 && input_num > 31
-            if fake_cursor_position < len(g_current_line) && len(g_current_line) > 0
+            if fake_cursor_position < len(current_line) && len(current_line) > 0
                 if fake_cursor_position == 0
-                    g_current_line = input .. g_current_line[0 : fake_cursor_position] .. g_current_line[fake_cursor_position + 1 : -1]
+                    current_line = input .. current_line[0 : fake_cursor_position] .. current_line[fake_cursor_position + 1 : -1]
                     fake_cursor_position = fake_cursor_position + 1
-                    PrintFakePrompt(g_current_line, fake_cursor_position)
+                    PrintFakePrompt(current_line, fake_cursor_position)
                 else
-                    g_current_line = g_current_line[0 : fake_cursor_position - 1] .. input .. g_current_line[fake_cursor_position : -1]
+                    current_line = current_line[0 : fake_cursor_position - 1] .. input .. current_line[fake_cursor_position : -1]
                     fake_cursor_position = fake_cursor_position + 1
-                    PrintFakePrompt(g_current_line, fake_cursor_position)
+                    PrintFakePrompt(current_line, fake_cursor_position)
                 endif
             elseif fake_cursor_position > 0
-                g_current_line = g_current_line[0 : fake_cursor_position] .. input .. g_current_line[fake_cursor_position + 1 : -1]
+                current_line = current_line[0 : fake_cursor_position] .. input .. current_line[fake_cursor_position + 1 : -1]
                 fake_cursor_position = fake_cursor_position + 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             else
-                if g_current_line == ""
-                    g_current_line = input .. g_current_line
+                if current_line == ""
+                    current_line = input .. current_line
                     fake_cursor_position = fake_cursor_position + 1
-                    PrintFakePrompt(g_current_line, fake_cursor_position)
+                    PrintFakePrompt(current_line, fake_cursor_position)
                 else
-                    g_current_line = input .. g_current_line
-                    PrintFakePrompt(g_current_line, fake_cursor_position)
+                    current_line = input .. current_line
+                    PrintFakePrompt(current_line, fake_cursor_position)
                 endif
             endif
-            SendCharMsg(mode, g_current_line)
+            SendCharMsg(cfg, current_line)
         elseif input == "\<Left>" || input == "\<C-h>"
             if fake_cursor_position > 0
                 fake_cursor_position = fake_cursor_position - 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             endif
         elseif input == "\<HOME>"
             fake_cursor_position = 0
-            PrintFakePrompt(g_current_line, fake_cursor_position)
+            PrintFakePrompt(current_line, fake_cursor_position)
         elseif input == "\<END>"
-            fake_cursor_position = len(g_current_line)
-            PrintFakePrompt(g_current_line, fake_cursor_position)
+            fake_cursor_position = len(current_line)
+            PrintFakePrompt(current_line, fake_cursor_position)
         elseif input == "\<Right>" || input == "\<C-l>"
-            if fake_cursor_position <= len(g_current_line) - 1
+            if fake_cursor_position <= len(current_line) - 1
                 InitPrompt()
                 fake_cursor_position = fake_cursor_position + 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             endif
         elseif input == "\<BS>"
             if fake_cursor_position < 1
                 continue
-            elseif fake_cursor_position == len(g_current_line)
-                g_current_line = g_current_line[0 : -2]
-                SendCharMsg(mode, g_current_line)
+            elseif fake_cursor_position == len(current_line)
+                current_line = current_line[0 : -2]
+                SendCharMsg(cfg, current_line)
                 fake_cursor_position = fake_cursor_position - 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             elseif fake_cursor_position > 1
-                var current_line_first = g_current_line[0 : fake_cursor_position - 2]
-                var current_line_last = g_current_line[fake_cursor_position  : -1]
-                g_current_line = current_line_first .. current_line_last
-                SendCharMsg(mode, g_current_line)
+                var current_line_first = current_line[0 : fake_cursor_position - 2]
+                var current_line_last = current_line[fake_cursor_position  : -1]
+                current_line = current_line_first .. current_line_last
+                SendCharMsg(cfg, current_line)
                 fake_cursor_position = fake_cursor_position - 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             elseif fake_cursor_position == 1
-                g_current_line = g_current_line[1  : -1]
-                SendCharMsg(mode, g_current_line)
+                current_line = current_line[1  : -1]
+                SendCharMsg(cfg, current_line)
                 fake_cursor_position = fake_cursor_position - 1
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                PrintFakePrompt(current_line, fake_cursor_position)
             endif
             clearmatches()
         elseif input == "\<DEL>"
             if fake_cursor_position == 0 
-                g_current_line = g_current_line[fake_cursor_position + 1 : -1]
-                SendCharMsg(mode, g_current_line)
-                PrintFakePrompt(g_current_line, fake_cursor_position)
-            elseif fake_cursor_position < len(g_current_line)
-                var current_line_first = g_current_line[0 : fake_cursor_position - 1]
-                var current_line_last = g_current_line[fake_cursor_position + 1 : -1]
-                g_current_line = current_line_first .. current_line_last
-                SendCharMsg(mode, g_current_line)
-                PrintFakePrompt(g_current_line, fake_cursor_position)
+                current_line = current_line[fake_cursor_position + 1 : -1]
+                SendCharMsg(cfg, current_line)
+                PrintFakePrompt(current_line, fake_cursor_position)
+            elseif fake_cursor_position < len(current_line)
+                var current_line_first = current_line[0 : fake_cursor_position - 1]
+                var current_line_last = current_line[fake_cursor_position + 1 : -1]
+                current_line = current_line_first .. current_line_last
+                SendCharMsg(cfg, current_line)
+                PrintFakePrompt(current_line, fake_cursor_position)
             endif
             clearmatches()
         elseif input == "\<Down>"
@@ -342,7 +357,7 @@ def BlockInput(mode: string): void
             norm j
             redraw
         elseif input == "\<CR>" || input == "\<C-t>" || input == "\<C-]>"
-            if g_current_line == ":q"
+            if current_line == ":q"
                 CloseWindow()
                 break
             endif
@@ -350,10 +365,10 @@ def BlockInput(mode: string): void
             var line = getline(".")
 
             if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
-                if mode == "yank"
+                if cfg.mode == "yank"
                     var for_paste = getline('.')
                     var result_lines = split(for_paste, "|")
-                    var file_name = g_yank_path .. "/" .. result_lines[0]
+                    var file_name = cfg.persist_path .. "/" .. result_lines[0]
                     var lines_for_paste = readfile(file_name)
                     if input == "\<CR>"
                         CloseWindow()
@@ -367,15 +382,15 @@ def BlockInput(mode: string): void
                 endif
             endif
 
-            var file_full_path = g_root_dir .. "/" .. line
-            if filereadable(g_current_line)
-                file_full_path = g_current_line
-            elseif mode == "mru"
+            var file_full_path = cfg.root_dir .. "/" .. line
+            if filereadable(current_line)
+                file_full_path = current_line
+            elseif cfg.mode == "mru"
                 file_full_path = line
             endif
             CloseWindow()
             if filereadable(file_full_path)
-                var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
+                var mru_msg = {"cmd": "write_mru", "mru_path": cfg.persist_path, "value": file_full_path }
                 job_handler.WriteToChannel(mru_msg)
                 if input == "\<CR>"
                     FocusOrOpen(file_full_path)
@@ -399,33 +414,30 @@ def InitProcess(): void
     endif
 enddef
 
+
 export def StartWindow(mode: string): void
-    g_orig_win = win_getid()
     InitProcess()
-    # Not implemented yet
-    InitWindow(mode, "")
+    # Target dir not implemented yet
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), "", mode)
+    InitWindow(cfg)
     try
-        BlockInput(mode)
+        BlockInput(cfg)
     catch /^Vim:Interrupt$/
         CloseWindow()
     endtry
 enddef
 
 export def Osc52YankHist(contents: list<any>): void
-    if exists('g:vim9_fuzzy_yank_path')
-        g_yank_path = g:vim9_fuzzy_yank_path
-    else
-        g_yank_path = g_script_dir .. "/../yank"
-    endif
-    mkdir(g_yank_path, "p")
+    var yank_path = GetYankPath()
+    mkdir(yank_path, "p")
 
     if len(contents[0]) > 1 || len(contents) > 1
-        var yank_file =  g_yank_path .. "/" .. strftime("%d-%b-%Y %T ")
+        var yank_file =  yank_path .. "/" .. strftime("%d-%b-%Y %T ")
         writefile(contents, yank_file, 'b')
     endif
-    var files = split(globpath(g_yank_path, '*'), '\n')
+    var files = split(globpath(yank_path, '*'), '\n')
     # ToDo: make the max num configurable and stop using unix commands.
     if len(files) > 50
-        system("rm -f \"`ls -1tr " .. g_yank_path .. "/* |head -n1`\"")
+        system("rm -f \"`ls -1tr " .. yank_path .. "/* |head -n1`\"")
     endif
 enddef
