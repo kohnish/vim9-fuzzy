@@ -43,7 +43,10 @@ Configuration
 # Enable vim9-fuzzy
 packadd! vim9-fuzzy
 
-# Root path to search from (No default yet)
+
+# Optional settings
+
+# Root path to search from (Default to the current dir)
 var proj_dir = getcwd()
 var git_root = system("git rev-parse --show-toplevel | tr -d '\n'")
 if len(git_root) > 0
@@ -58,10 +61,10 @@ noremap <C-f> :Vim9FuzzyFile<CR>
 noremap <C-p> :Vim9FuzzyPath<CR>
 # Search in last opened files via vim9-fuzzy.
 noremap <C-e> :Vim9FuzzyMru<CR>
+# Search in the directory of the current dir
+# noremap <C-k> :Vim9FuzzyPwdFile<CR>
 
-
-# Optional settings
-# Override defaut list cmd
+# Override defaut list cmd (defaults to rg)
 g:vim9fuzzy_user_list_func = true
 def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
     var git_exe = exepath("git")
@@ -83,12 +86,11 @@ enddef
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
 # For fuzzy yank history search
-noremap <C-y> :Vim9FuzzyYank<CR>
 # Enable yank hook (Default false)
 g:vim9_fuzzy_yank_enabled = true
+noremap <C-y> :Vim9FuzzyYank<CR>
 # The path for keeping yank histories (Defaulting here)
 g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
-
 ```
 
 Build requirements
