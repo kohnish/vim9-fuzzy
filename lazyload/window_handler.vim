@@ -18,7 +18,7 @@ def GetListCmdStr(root_dir: string, target_dir: string): string
     if dir == ""
         dir = root_dir
     endif
-    return rg_cmd .. " --files " .. dir
+    return "cd " .. dir .. " && " .. rg_cmd .. " --files "
 enddef
 
 def GetRootdir(): string
