@@ -42,24 +42,21 @@ def GetYankPath(): string
 enddef
 
 def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string): dict<any>
-    var persist_path = ""
-    var init_cmd_name = ""
-    if mode == "mru"
-        if exists('g:vim9_fuzzy_mru_path')
-            persist_path = g:vim9_fuzzy_mru_path
-        else
-            persist_path = persist_dir .. "/../mru"
-        endif
-    elseif mode == "yank"
-        persist_path = GetYankPath()
+    var mru_path = ""
+    if exists('g:vim9_fuzzy_mru_path')
+        mru_path = g:vim9_fuzzy_mru_path
+    else
+        mru_path = persist_dir .. "/../mru"
     endif
+    var yank_path = GetYankPath()
 
     # All const members
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
         "root_dir": root_dir,
         "target_dir": target_dir,
-        "persist_path": persist_path,
+        "mru_path": mru_path,
+        "yank_path": yank_path,
         "mode": mode,
     }
 enddef
@@ -156,9 +153,9 @@ def InitWindow(cfg: dict<any>): void
     elseif cfg.mode == "path"
         job_handler.WriteToChannel({"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd})
     elseif cfg.mode == "mru"
-        job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": cfg.persist_path})
+        job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": cfg.mru_path})
     elseif cfg.mode == "yank"
-        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": cfg.persist_path})
+        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": cfg.yank_path})
     endif
 
     redraw
@@ -177,7 +174,7 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
             var msg2send = {"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.persist_path}
+            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
             job_handler.WriteToChannel(msg2send)
         endif
     elseif cfg.mode == "path"
@@ -185,23 +182,23 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
             var msg2send = {"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.persist_path}
+            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
             job_handler.WriteToChannel(msg2send)
         endif
     elseif cfg.mode == "mru"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_mru", "mru_path": cfg.persist_path}
+            var msg2send = {"cmd": "init_mru", "mru_path": cfg.mru_path}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "mru", "value": msg, "mru_path": cfg.persist_path}
+            var msg2send = {"cmd": "mru", "value": msg, "mru_path": cfg.mru_path}
             job_handler.WriteToChannel(msg2send)
         endif
     elseif cfg.mode == "yank"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_yank", "yank_path": cfg.persist_path}
+            var msg2send = {"cmd": "init_yank", "yank_path": cfg.yank_path}
             job_handler.WriteToChannel(msg2send)
         else
-            var msg2send = {"cmd": "yank", "value": msg, "yank_path": cfg.persist_path}
+            var msg2send = {"cmd": "yank", "value": msg, "yank_path": cfg.yank_path}
             job_handler.WriteToChannel(msg2send)
         endif
     endif
@@ -372,7 +369,7 @@ def BlockInput(cfg: dict<any>): void
                 if cfg.mode == "yank"
                     var for_paste = getline('.')
                     var result_lines = split(for_paste, "|")
-                    var file_name = cfg.persist_path .. "/" .. result_lines[0]
+                    var file_name = cfg.yank_path .. "/" .. result_lines[0]
                     var lines_for_paste = readfile(file_name)
                     if input == "\<CR>"
                         CloseWindow()
@@ -408,7 +405,7 @@ def BlockInput(cfg: dict<any>): void
 
             CloseWindow()
             if filereadable(file_full_path)
-                var mru_msg = {"cmd": "write_mru", "mru_path": cfg.persist_path, "value": file_full_path }
+                var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
                 job_handler.WriteToChannel(mru_msg)
                 if input == "\<CR>"
                     FocusOrOpen(file_full_path)
