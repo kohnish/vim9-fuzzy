@@ -69,14 +69,14 @@ def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
     if dir == ""
         dir = root_dir
     endif
-    var is_in_git_dir = system("cd " .. dir .. " && " .. git_exe .. " rev-parse --is-inside-work-tree")
+    var is_in_git_dir = system(git_exe .. " -C " .. dir .. " rev-parse --is-inside-work-tree")
     var in_git_dir = v:shell_error == 0
     var is_in_ignore_dir = system("git check-ignore " .. dir)
     var in_ignore_dir = v:shell_error == 0
     if in_git_dir && !in_ignore_dir
-        return git_exe .. " ls-files --full-name " .. dir .. " | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
+        return git_exe .. " -C " .. dir .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
     endif
-    return "find " .. dir .. " -type f -maxdepth 5 | xargs readlink -f"
+    return "find " .. dir .. " -type f -maxdepth 3"
 enddef
 
 # Path for keeping most recently used files (Default here)
