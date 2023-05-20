@@ -213,17 +213,14 @@ enddef
 
 def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): string
     var file_full_path = ""
+    var base_dir = cfg.root_dir
     if !empty(cfg.target_dir)
-        if cfg.list_cmd["trim_target_dir"]
-            # In case user command does cd to skip printing target dir
-            file_full_path = cfg.target_dir .. "/" .. line
-        else
-            # Trust the output is absolute path or relative path from the current dir
-            file_full_path = line
-        endif
+        base_dir = cfg.target_dir
+    endif
+    if cfg.list_cmd["trim_target_dir"]
+        file_full_path = base_dir .. "/" .. line
     else
-        # Without target dir arg, base dir is always trimmed.
-        file_full_path = cfg.root_dir .. "/" .. line
+        file_full_path = line
     endif
 
     # Let prompt behave like :e
