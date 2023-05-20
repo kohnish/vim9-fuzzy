@@ -15,8 +15,7 @@ def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     if has("win64") || has("win32") || has("win16")
         rg_cmd = rg_cmd .. ".exe"
     endif
-    var dir = target_dir
-    if dir == ""
+    if target_dir == ""
         return {
             "trim_target_dir": true,
             "cmd": "cd " .. root_dir .. " && " .. rg_cmd .. " --files ",
@@ -24,7 +23,7 @@ def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     endif
     return {
         "trim_target_dir": false,
-        "cmd": rg_cmd .. " --files " .. dir,
+        "cmd": rg_cmd .. " --files " .. target_dir,
     }
 enddef
 
@@ -153,18 +152,9 @@ def InitWindow(cfg: dict<any>): void
     setlocal filetype=
 
     InitPrompt()
-
-    # ToDo: Remove the checks and make it generic.
-    if cfg.mode == "file"
-        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]})
-    elseif cfg.mode == "path"
-        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]})
-    elseif cfg.mode == "mru"
-        job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": cfg.mru_path})
-    elseif cfg.mode == "yank"
-        job_handler.WriteToChannel({"cmd": "init_yank", "yank_path": cfg.yank_path})
-    endif
-
+    var cmd = "init_" .. cfg.mode
+    var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
+    job_handler.WriteToChannel(msg2send)
     redraw
 enddef
 
@@ -175,40 +165,12 @@ def CloseWindow(): void
 enddef
 
 def SendCharMsg(cfg: dict<any>, msg: string): void
-    # ToDo: make it generic
-    if cfg.mode == "file"
-        if len(msg) == 0
-            var msg2send = {"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]}
-            job_handler.WriteToChannel(msg2send)
-        else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
-            job_handler.WriteToChannel(msg2send)
-        endif
-    elseif cfg.mode == "path"
-        if len(msg) == 0
-            var msg2send = {"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]}
-            job_handler.WriteToChannel(msg2send)
-        else
-            var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
-            job_handler.WriteToChannel(msg2send)
-        endif
-    elseif cfg.mode == "mru"
-        if len(msg) == 0
-            var msg2send = {"cmd": "init_mru", "mru_path": cfg.mru_path}
-            job_handler.WriteToChannel(msg2send)
-        else
-            var msg2send = {"cmd": "mru", "value": msg, "mru_path": cfg.mru_path}
-            job_handler.WriteToChannel(msg2send)
-        endif
-    elseif cfg.mode == "yank"
-        if len(msg) == 0
-            var msg2send = {"cmd": "init_yank", "yank_path": cfg.yank_path}
-            job_handler.WriteToChannel(msg2send)
-        else
-            var msg2send = {"cmd": "yank", "value": msg, "yank_path": cfg.yank_path}
-            job_handler.WriteToChannel(msg2send)
-        endif
+    var cmd = cfg.mode
+    if len(msg) == 0
+        cmd = "init_" .. cmd
     endif
+    var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
+    job_handler.WriteToChannel(msg2send)
 enddef
 
 def PrintFakePrompt(line: string, cursor_pos: number): void
