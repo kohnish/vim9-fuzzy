@@ -421,7 +421,7 @@ def BlockInput(cfg: dict<any>): void
                 endif
             endif
 
-            var file_full_path = GetFullPathFromResult(cfg, line, current_line)
+            var file_full_path = fnamemodify(GetFullPathFromResult(cfg, line, current_line), ':p')
 
             CloseWindow()
             if filereadable(file_full_path)
