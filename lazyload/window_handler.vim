@@ -5,10 +5,11 @@ import "./job_handler.vim"
 var g_initialised = false
 const g_script_dir = expand('<script>:p:h')
 
-def GetListCmdStr(root_dir: string, target_dir: string): string
+def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     if exists('g:vim9fuzzy_user_list_func') && g:vim9fuzzy_user_list_func
         return g:Vim9fuzzy_user_list_func(root_dir, target_dir)
     endif
+
     # Default
     var rg_cmd = "rg"
     if has("win64") || has("win32") || has("win16")
@@ -16,9 +17,15 @@ def GetListCmdStr(root_dir: string, target_dir: string): string
     endif
     var dir = target_dir
     if dir == ""
-        dir = root_dir
+        return {
+            "trim_target_dir": true,
+            "cmd": "cd " .. root_dir .. " && " .. rg_cmd .. " --files ",
+        }
     endif
-    return "cd " .. dir .. " && " .. rg_cmd .. " --files "
+    return {
+        "trim_target_dir": false,
+        "cmd": rg_cmd .. " --files " .. dir,
+    }
 enddef
 
 def GetRootdir(): string
@@ -149,9 +156,9 @@ def InitWindow(cfg: dict<any>): void
 
     # ToDo: Remove the checks and make it generic.
     if cfg.mode == "file"
-        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd})
+        job_handler.WriteToChannel({"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]})
     elseif cfg.mode == "path"
-        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd})
+        job_handler.WriteToChannel({"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]})
     elseif cfg.mode == "mru"
         job_handler.WriteToChannel({"cmd": "init_mru", "mru_path": cfg.mru_path})
     elseif cfg.mode == "yank"
@@ -171,7 +178,7 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
     # ToDo: make it generic
     if cfg.mode == "file"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
+            var msg2send = {"cmd": "init_file", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]}
             job_handler.WriteToChannel(msg2send)
         else
             var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
@@ -179,7 +186,7 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
         endif
     elseif cfg.mode == "path"
         if len(msg) == 0
-            var msg2send = {"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd}
+            var msg2send = {"cmd": "init_path", "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"]}
             job_handler.WriteToChannel(msg2send)
         else
             var msg2send = {"cmd": "file", "value": msg, "root_dir": cfg.root_dir, "mru_path": cfg.mru_path}
@@ -245,14 +252,15 @@ enddef
 def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): string
     var file_full_path = ""
     if !empty(cfg.target_dir)
-        # ToDo: fix this dangerous guess
-        # In case user command does cd to skip printing target dir
-        file_full_path = cfg.target_dir .. "/" .. line
-        if !filereadable(file_full_path)
-            # In case user command output prints proper relative/absolute path
+        if cfg.list_cmd["trim_target_dir"]
+            # In case user command does cd to skip printing target dir
+            file_full_path = cfg.target_dir .. "/" .. line
+        else
+            # Trust the output is absolute path or relative path from the current dir
             file_full_path = line
         endif
     else
+        # Without target dir arg, base dir is always trimmed.
         file_full_path = cfg.root_dir .. "/" .. line
     endif
 

@@ -43,7 +43,6 @@ Configuration
 # Enable vim9-fuzzy
 packadd! vim9-fuzzy
 
-
 # Optional settings
 
 # Root path to search from (Default to the current dir)
@@ -65,8 +64,7 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 # noremap <C-k> :Vim9FuzzyPwdFile<CR>
 
 # Override defaut list cmd (defaults to rg)
-g:vim9fuzzy_user_list_func = true
-def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
+def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): dict<any>
     var git_exe = exepath("git")
     var dir = target_dir
     if dir == ""
@@ -77,9 +75,15 @@ def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): string
     var is_in_ignore_dir = system("git check-ignore " .. dir)
     var in_ignore_dir = v:shell_error == 0
     if in_git_dir && !in_ignore_dir
-        return git_exe .. " -C " .. dir .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
+        return {
+            "trim_target_dir": true,
+            "cmd": git_exe .. " -C " .. dir .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
+        }
     endif
-    return "find " .. dir .. " -type f -maxdepth 3"
+    return {
+        "trim_target_dir": false,
+        "cmd": "find " .. dir .. " -type f -maxdepth 3"
+    }
 enddef
 
 # Path for keeping most recently used files (Default here)
