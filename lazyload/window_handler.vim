@@ -242,6 +242,36 @@ def FocusIfOpen(filename: string): number
     return f_ret
 enddef
 
+def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): string
+    var file_full_path = ""
+    if !empty(cfg.target_dir)
+        # ToDo: fix this dangerous guess
+        # In case user command does cd to skip printing target dir
+        file_full_path = cfg.target_dir .. "/" .. line
+        if !filereadable(file_full_path)
+            # In case user command output prints proper relative/absolute path
+            file_full_path = line
+        endif
+    else
+        file_full_path = cfg.root_dir .. "/" .. line
+    endif
+
+    # Let prompt behave like :e
+    # ToDo: Make this configurable as well.
+    if !filereadable(file_full_path)
+        if filereadable(current_line)
+            file_full_path = current_line
+        endif
+    endif
+
+    # MRU is always stored as absolute path
+    if cfg.mode == "mru"
+        file_full_path = line
+    endif
+
+    return file_full_path
+enddef
+
 def FocusOrOpen(filename: string): void
     var f_ret = FocusIfOpen(filename)
     if f_ret == WIN_FOCUSED_ON_MODIFIABLE
@@ -383,25 +413,7 @@ def BlockInput(cfg: dict<any>): void
                 endif
             endif
 
-            # ToDo: no correctness guarantee. Fix this
-            var file_full_path = cfg.root_dir .. "/" .. line
-            if line[0] == '/'
-                file_full_path = line
-            endif
-
-            if !filereadable(file_full_path)
-                file_full_path = getcwd() .. "/" .. line
-            endif
-
-            if !filereadable(file_full_path)
-                file_full_path = cfg.target_dir .. "/" .. line
-            endif
-
-            if filereadable(current_line)
-                file_full_path = current_line
-            elseif cfg.mode == "mru"
-                file_full_path = line
-            endif
+            var file_full_path = GetFullPathFromResult(cfg, line, current_line)
 
             CloseWindow()
             if filereadable(file_full_path)
