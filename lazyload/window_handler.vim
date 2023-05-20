@@ -128,7 +128,7 @@ def InitPrompt(): void
 enddef
 
 def InitWindow(cfg: dict<any>): void
-    noautocmd keepalt keepjumps botright split Vim9 Fuzzy
+    noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
     resize 20
 
     setlocal statusline=\ \ Vim9\ Fuzzy
