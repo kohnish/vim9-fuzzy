@@ -64,6 +64,7 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 # noremap <C-k> :Vim9FuzzyPwdFile<CR>
 
 # Override defaut list cmd (defaults to rg)
+g:vim9fuzzy_user_list_func = true
 def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): dict<any>
     var git_exe = exepath("git")
     var dir = target_dir
