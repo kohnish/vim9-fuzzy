@@ -45,21 +45,21 @@ char *json_escape(const char *json, size_t len, size_t *result_len) {
     return buf;
 }
 
-static int create_res_json(const char *cmd, file_info_t *file_info, size_t size, char *buf) {
+static int create_res_json(const char *cmd, file_info_t *file_info, size_t size, char *buf, int seq) {
     if (size == 0) {
-        sprintf(buf, "{\"cmd\": \"%s\", \"result\": []}\n", cmd);
+        sprintf(buf, "[%i, {\"cmd\": \"%s\", \"result\": []}]\n", seq, cmd);
         return 0;
     }
-    int json_size = sprintf(buf, "{\"cmd\": \"%s\", \"result\": [", cmd);
+    int json_size = sprintf(buf, "[%i, {\"cmd\": \"%s\", \"result\": [", seq, cmd);
     for (size_t i = 0; i < size; i++) {
         int add_size = sprintf(&buf[json_size], "{\"name\": \"%s\", \"match_pos\": %lu},", file_info[i].file_path, file_info[i].match_pos_flag);
         json_size += add_size;
     }
-    sprintf(&buf[json_size - 1], "]}\n");
+    sprintf(&buf[json_size - 1], "]}]\n");
     return json_size;
 }
 
-void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size) {
+void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size, int seq) {
     static char json_res_str[MAX_REAL_RESPONSE_SIZE];
     memset(json_res_str, 0, (((long)MAX_REAL_RESPONSE_SIZE)));
 
@@ -67,7 +67,7 @@ void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t siz
     if (size > MAX_RESPONSE_LINES) {
         send_sz = MAX_RESPONSE_LINES;
     }
-    int j_res = create_res_json(cmd, file_info, send_sz, json_res_str);
+    int j_res = create_res_json(cmd, file_info, send_sz, json_res_str, seq);
     if (j_res >= 0) {
         static char stdout_buf[MAX_REAL_RESPONSE_SIZE];
         memset(stdout_buf, 0, (long)MAX_REAL_RESPONSE_SIZE);
@@ -101,6 +101,7 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     char mru_path[PATH_MAX] = {0};
     char yank_path[PATH_MAX] = {0};
     char list_cmd[PATH_MAX] = {0};
+    int seq = 0;
     jsmn_parse(&j_parser, json_str, strlen(json_str) + 1, j_tokens, sizeof(j_tokens) / sizeof(j_tokens[0]));
     // easy parsing. No depth guarantee.
     for (int i = 0; i < MAX_JSON_TOKENS; i++) {
@@ -124,22 +125,33 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
             jsmntok_t *next_tok = &j_tokens[i + 1];
             strncpy(list_cmd, json_str + next_tok->start, next_tok->end - next_tok->start);
             i++;
+        } else if (j_tokens[i].type == JSMN_PRIMITIVE) {
+            jsmntok_t *next_tok = &j_tokens[i];
+            char int_str[100] = { 0 };
+            strncpy(int_str, json_str + next_tok->start, next_tok->end - next_tok->start);
+            seq = atoi(int_str);
         }
     }
 
+    FILE *fp = fopen("/var/tmp/t", "a");
+    fprintf(fp, "cmd %i\n", seq);
+    fprintf(fp, "value %s\n", value);
+    fprintf(fp, "list_cmd %s\n", list_cmd);
+    fclose(fp);
+
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
-        queue_search(loop, cmd, value, list_cmd);
+        queue_search(loop, cmd, value, list_cmd, seq);
     } else if (strcmp(cmd, "init_mru") == 0) {
-        queue_mru_search(loop, "", mru_path);
+        queue_mru_search(loop, "", mru_path, seq);
     } else if (strcmp(cmd, "write_mru") == 0) {
         write_mru(mru_path, value);
     } else if (strcmp(cmd, "init_yank") == 0) {
-        queue_yank_search(loop, "", yank_path);
+        queue_yank_search(loop, "", yank_path, seq);
     } else if (strcmp(cmd, "mru") == 0) {
-        queue_mru_search(loop, value, mru_path);
+        queue_mru_search(loop, value, mru_path, seq);
     } else if (strcmp(cmd, "yank") == 0) {
-        queue_yank_search(loop, value, yank_path);
+        queue_yank_search(loop, value, yank_path, seq);
     }
 }
 

@@ -346,7 +346,7 @@ void toggle_cancel(int val) {
     uv_mutex_unlock(&cancel_mutex);
 }
 
-size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len) {
+size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len, int seq) {
     size_t matched_len = 0;
     static char word[MAX_VIM_INPUT];
     memset(word, 0, MAX_VIM_INPUT);
@@ -393,7 +393,7 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
         }
     }
     qsort(file_res, matched_len, sizeof(file_info_t), result_compare);
-    send_res_from_file_info(cmd, file_res, matched_len);
+    send_res_from_file_info(cmd, file_res, matched_len, seq);
 
     return matched_len;
 }

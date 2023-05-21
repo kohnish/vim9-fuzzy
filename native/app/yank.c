@@ -116,13 +116,13 @@ void deinit_yank(void) {
     }
 }
 
-int init_yank(const char *yank_path) {
+int init_yank(const char *yank_path, int seq) {
     deinit_yank();
     g_str_pool = init_str_pool(10240);
     int ret = -1;
     ret = load_yank_to_file_info(&g_str_pool, &g_yank_cache, &g_yank_len, yank_path);
     if (ret > 0) {
-        send_res_from_file_info("yank", g_yank_cache, g_yank_len);
+        send_res_from_file_info("yank", g_yank_cache, g_yank_len, seq);
     }
     return ret;
 }
@@ -137,14 +137,14 @@ static void after_fuzzy_yank_search(uv_work_t *req, int status) {
 static void fuzzy_yank_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
-        init_yank(search_data->yank_path);
+        init_yank(search_data->yank_path, search_data->seq_);
     } else {
-        start_fuzzy_response(search_data->value, "yank", search_data->file_info, search_data->file_info_len);
+        start_fuzzy_response(search_data->value, "yank", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
     toggle_yank_init(0);
 }
 
-int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path) {
+int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path, int seq) {
     toggle_yank_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
@@ -152,6 +152,7 @@ int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path)
     search_data->value[strlen(value) + 1] = '\0';
     search_data->file_info_len = g_yank_len;
     search_data->file_info = g_yank_cache;
+    search_data->seq_ = seq;
     strcpy(search_data->yank_path, yank_path);
     req->data = search_data;
     int ret = uv_queue_work(loop, req, fuzzy_yank_search, after_fuzzy_yank_search);
