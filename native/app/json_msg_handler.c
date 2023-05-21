@@ -133,12 +133,6 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         }
     }
 
-    FILE *fp = fopen("/var/tmp/t", "a");
-    fprintf(fp, "cmd %i\n", seq);
-    fprintf(fp, "value %s\n", value);
-    fprintf(fp, "list_cmd %s\n", list_cmd);
-    fclose(fp);
-
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
         queue_search(loop, cmd, value, list_cmd, seq);
