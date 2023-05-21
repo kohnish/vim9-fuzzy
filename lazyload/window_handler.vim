@@ -101,8 +101,6 @@ def CountCharUntil(line: string, char: string): number
             break
         endif
     endfor
-    # Only used in yank and has space
-    counter += 2
     return counter
 enddef
 
@@ -122,7 +120,7 @@ export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
             for j in bin_list
-                if ctx.mode == "yank" && col_counter < CountCharUntil(i["name"], '|')
+                if ctx.mode == "yank" && col_counter < CountCharUntil(i["name"], '|') + 2
                     col_counter += 1
                     continue
                 endif
