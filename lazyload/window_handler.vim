@@ -92,7 +92,21 @@ def IntToBin(n: number, fill_len: number): list<any>
     return reverse(bin_list)
 enddef
 
-export def PrintResult(json_msg: dict<any>): void
+def CountCharUntil(line: string, char: string): number
+    var counter = 0
+    for i in range(len(line))
+        if line[i] != char
+            counter += 1
+        else
+            break
+        endif
+    endfor
+    # Only used in yank and has space
+    counter += 2
+    return counter
+enddef
+
+export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
     var buf_id = bufnr("Vim9 Fuzzy")
     if buf_id == -1
         return
@@ -108,6 +122,10 @@ export def PrintResult(json_msg: dict<any>): void
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
             for j in bin_list
+                if ctx.mode == "yank" && col_counter < CountCharUntil(i["name"], '|')
+                    col_counter += 1
+                    continue
+                endif
                 if j == 1
                     matchaddpos("matched_str_colour", [[line_counter, col_counter]], buf_id) 
                 endif
@@ -154,7 +172,7 @@ def InitWindow(cfg: dict<any>): void
     InitPrompt()
     var cmd = "init_" .. cfg.mode
     var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(msg2send)
+    job_handler.WriteToChannel(msg2send, cfg, PrintResult)
     redraw
 enddef
 
@@ -170,7 +188,7 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
         cmd = "init_" .. cmd
     endif
     var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(msg2send)
+    job_handler.WriteToChannel(msg2send, cfg, PrintResult)
 enddef
 
 def PrintFakePrompt(line: string, cursor_pos: number): void
@@ -385,7 +403,7 @@ def BlockInput(cfg: dict<any>): void
             CloseWindow()
             if filereadable(file_full_path)
                 var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
-                job_handler.WriteToChannel(mru_msg)
+                job_handler.WriteToChannel(mru_msg, cfg, PrintResult)
                 if input == "\<CR>"
                     FocusOrOpen(file_full_path)
                 elseif input == "\<C-]>"

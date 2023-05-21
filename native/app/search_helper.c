@@ -93,7 +93,7 @@ static size_t load_lines_from_fp_to_file_info(str_pool_t ***str_pool, size_t ini
     return counter;
 }
 
-static void init_file(const char *cmd, const char *list_cmd) {
+static void init_file(const char *cmd, const char *list_cmd, int seq) {
     if (g_f_cache_len > 0) {
         deinit_file();
     }
@@ -115,7 +115,7 @@ static void init_file(const char *cmd, const char *list_cmd) {
     pclose(fp);
     g_f_cache_len = loaded_sz;
 
-    send_res_from_file_info("file", g_f_cache, g_f_cache_len);
+    send_res_from_file_info("file", g_f_cache, g_f_cache_len, seq);
 }
 
 static void after_fuzzy_file_search(uv_work_t *req, int status) {
@@ -128,14 +128,14 @@ static void after_fuzzy_file_search(uv_work_t *req, int status) {
 static void fuzzy_file_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
-        init_file(search_data->cmd, search_data->list_cmd);
+        init_file(search_data->cmd, search_data->list_cmd, search_data->seq_);
     } else {
-        start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len);
+        start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
     toggle_file_init(0);
 }
 
-int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd) {
+int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd, int seq) {
     toggle_file_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
@@ -143,6 +143,7 @@ int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char
     search_data->value[strlen(value) + 1] = '\0';
     search_data->file_info_len = g_f_cache_len;
     search_data->file_info = g_f_cache;
+    search_data->seq_ = seq;
     strcpy(search_data->cmd, cmd);
     strcpy(search_data->list_cmd, list_cmd);
     req->data = search_data;

@@ -149,19 +149,19 @@ void deinit_mru(void) {
     }
 }
 
-int init_mru(const char *mru_path) {
+int init_mru(const char *mru_path, int seq) {
     deinit_mru();
     g_str_pool = init_str_pool(10240);
     int ret = -1;
     if (access(mru_path, F_OK) != 0) {
-        send_res_from_file_info("mru", NULL, 0);
+        send_res_from_file_info("mru", NULL, 0, seq);
         return ret;
     }
     FILE *fp = fopen(mru_path, "r");
     if (fp != NULL) {
         ret = load_mru_to_file_info(&g_str_pool, &g_mru_cache, &g_mru_len, fp);
         if (ret > 0) {
-            send_res_from_file_info("mru", g_mru_cache, g_mru_len);
+            send_res_from_file_info("mru", g_mru_cache, g_mru_len, seq);
         }
         fclose(fp);
     }
@@ -178,14 +178,14 @@ static void after_fuzzy_mru_search(uv_work_t *req, int status) {
 static void fuzzy_mru_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
-        init_mru(search_data->mru_path);
+        init_mru(search_data->mru_path, search_data->seq_);
     } else {
-        start_fuzzy_response(search_data->value, "mru", search_data->file_info, search_data->file_info_len);
+        start_fuzzy_response(search_data->value, "mru", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
     toggle_mru_init(0);
 }
 
-int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path) {
+int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path, int seq) {
     toggle_mru_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
@@ -193,6 +193,7 @@ int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path) {
     search_data->value[strlen(value) + 1] = '\0';
     search_data->file_info_len = g_mru_len;
     search_data->file_info = g_mru_cache;
+    search_data->seq_ = seq;
     strcpy(search_data->mru_path, mru_path);
     req->data = search_data;
     int ret = uv_queue_work(loop, req, fuzzy_mru_search, after_fuzzy_mru_search);
