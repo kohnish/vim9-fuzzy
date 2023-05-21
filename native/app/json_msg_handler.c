@@ -106,28 +106,23 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     // easy parsing. No depth guarantee.
     for (int i = 0; i < MAX_JSON_TOKENS; i++) {
         if (json_eq(json_str, &j_tokens[i], "cmd") == 0) {
-            jsmntok_t *next_tok = &j_tokens[i + 1];
+            jsmntok_t *next_tok = &j_tokens[++i];
             strncpy(cmd, json_str + next_tok->start, next_tok->end - next_tok->start);
-            i++;
         } else if (json_eq(json_str, &j_tokens[i], "value") == 0) {
-            jsmntok_t *next_tok = &j_tokens[i + 1];
+            jsmntok_t *next_tok = &j_tokens[++i];
             strncpy(value, json_str + next_tok->start, next_tok->end - next_tok->start);
-            i++;
         } else if (json_eq(json_str, &j_tokens[i], "mru_path") == 0) {
-            jsmntok_t *next_tok = &j_tokens[i + 1];
+            jsmntok_t *next_tok = &j_tokens[++i];
             strncpy(mru_path, json_str + next_tok->start, next_tok->end - next_tok->start);
-            i++;
         } else if (json_eq(json_str, &j_tokens[i], "yank_path") == 0) {
-            jsmntok_t *next_tok = &j_tokens[i + 1];
+            jsmntok_t *next_tok = &j_tokens[++i];
             strncpy(yank_path, json_str + next_tok->start, next_tok->end - next_tok->start);
-            i++;
         } else if (json_eq(json_str, &j_tokens[i], "list_cmd") == 0) {
-            jsmntok_t *next_tok = &j_tokens[i + 1];
+            jsmntok_t *next_tok = &j_tokens[++i];
             strncpy(list_cmd, json_str + next_tok->start, next_tok->end - next_tok->start);
-            i++;
         } else if (j_tokens[i].type == JSMN_PRIMITIVE) {
             jsmntok_t *next_tok = &j_tokens[i];
-            char int_str[100] = { 0 };
+            char int_str[100] = {0};
             strncpy(int_str, json_str + next_tok->start, next_tok->end - next_tok->start);
             seq = atoi(int_str);
         }
