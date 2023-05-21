@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <uv.h>
 
+#define LENGTH_HEADER "Content-Length: "
+#define LENGTH_HEADER_SZ (sizeof(LENGTH_HEADER) - 1)
+
 static void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     (void)handle;
     (void)suggested_size;
@@ -17,18 +20,40 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *b
 }
 
 static void read_stdin(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-    (void)nread;
     static char line[MAX_VIM_INPUT] = {0};
-    memset(line, 0, MAX_VIM_INPUT);
-    int counter = 0;
-    for (size_t i = 0; i < strlen(buf->base); i++) {
-        if (buf->base[i] == '\n') {
-            handle_json_msg(stream->loop, line);
+    static int content_len = 0;
+    static int start = 0;
+    static char json_line[MAX_VIM_INPUT] = {0};
+    static int json_counter = 0;
+    static int line_counter = 0;
+    for (ssize_t i = 0; i <= nread; i++) {
+        line[line_counter] = buf->base[i];
+        if (buf->base[i] == '\n' && i > 0 && buf->base[i - 1] == '\r') {
+            const char *sz = strstr(line, LENGTH_HEADER);
+            if (sz) {
+                content_len = atoi(sz + LENGTH_HEADER_SZ);
+            } else if (strlen(line) == 2) {
+                start = 1;
+            }
             memset(line, 0, MAX_VIM_INPUT);
-            counter = 0;
+            line_counter = 0;
         } else {
-            line[counter] = buf->base[i];
-            counter++;
+            line_counter++;
+            if (start == 1) {
+                json_line[json_counter] = buf->base[i];
+                if (json_counter == content_len) {
+                    json_line[json_counter + 1] = '\0';
+                    handle_json_msg(stream->loop, json_line);
+                    memset(json_line, 0, MAX_VIM_INPUT);
+                    memset(line, 0, MAX_VIM_INPUT);
+                    start = 0;
+                    content_len = 0;
+                    json_counter = 0;
+                    line_counter = 0;
+                    break;
+                }
+                ++json_counter;
+            }
         }
     }
 }
