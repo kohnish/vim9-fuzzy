@@ -47,16 +47,14 @@ char *json_escape(const char *json, size_t len, size_t *result_len) {
 
 static int create_res_json(const char *cmd, file_info_t *file_info, size_t size, char *buf, int seq) {
     if (size == 0) {
-        sprintf(buf, "[%i, {\"cmd\": \"%s\", \"result\": []}]\n", seq, cmd);
-        return 0;
+        return sprintf(buf, "{\"id\": %i, \"cmd\": \"%s\", \"result\": []}\n", seq, cmd);
     }
-    int json_size = sprintf(buf, "[%i, {\"cmd\": \"%s\", \"result\": [", seq, cmd);
+    int json_size = sprintf(buf, "{\"id\": %i, \"cmd\": \"%s\", \"result\": [", seq, cmd);
     for (size_t i = 0; i < size; i++) {
         int add_size = sprintf(&buf[json_size], "{\"name\": \"%s\", \"match_pos\": %lu},", file_info[i].file_path, file_info[i].match_pos_flag);
         json_size += add_size;
     }
-    sprintf(&buf[json_size - 1], "]}]\n");
-    return json_size;
+    return sprintf(&buf[json_size - 1], "]}\n");
 }
 
 void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t size, int seq) {
@@ -72,7 +70,7 @@ void send_res_from_file_info(const char *cmd, file_info_t *file_info, size_t siz
         static char stdout_buf[MAX_REAL_RESPONSE_SIZE];
         memset(stdout_buf, 0, (long)MAX_REAL_RESPONSE_SIZE);
         setvbuf(stdout, stdout_buf, _IOFBF, (long)MAX_REAL_RESPONSE_SIZE);
-        fprintf(stdout, "%s\n", json_res_str);
+        fprintf(stdout, "Content-Length: %i\r\n\r\n%s\n", j_res, json_res_str);
         fflush(stdout);
     }
 }
@@ -85,13 +83,6 @@ static int json_eq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 void handle_json_msg(uv_loop_t *loop, const char *json_str) {
-    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
-        toggle_cancel(1);
-        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
-            usleep(1000);
-        }
-    }
-
     jsmn_parser j_parser;
     jsmn_init(&j_parser);
     jsmntok_t j_tokens[MAX_JSON_TOKENS];
@@ -102,7 +93,18 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     char yank_path[PATH_MAX] = {0};
     char list_cmd[PATH_MAX] = {0};
     int seq = 0;
-    jsmn_parse(&j_parser, json_str, strlen(json_str) + 1, j_tokens, sizeof(j_tokens) / sizeof(j_tokens[0]));
+    int ret = jsmn_parse(&j_parser, json_str, strlen(json_str) + 1, j_tokens, sizeof(j_tokens) / sizeof(j_tokens[0]));
+    if (ret == 0) {
+        return;
+    }
+
+    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+        toggle_cancel(1);
+        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+            usleep(1000);
+        }
+    }
+
     // easy parsing. No depth guarantee.
     for (int i = 0; i < MAX_JSON_TOKENS; i++) {
         if (json_eq(json_str, &j_tokens[i], "cmd") == 0) {

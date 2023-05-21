@@ -7,8 +7,8 @@ const g_default_executable_path = fnamemodify(resolve(expand('<script>:p')), ':h
 
 export def StartFinderProcess(): void
     var job_opt = {
-        "out_mode": "js",
-        "in_mode": "json",
+        "out_mode": "lsp",
+        "in_mode": "lsp",
     }
     var executable = ""
     if !exists('g:vim9_fuzzy_exe_path')
