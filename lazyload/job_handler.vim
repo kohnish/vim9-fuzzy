@@ -9,6 +9,7 @@ export def StartFinderProcess(): void
     var job_opt = {
         "out_mode": "lsp",
         "in_mode": "lsp",
+        "noblock": 1,
     }
     var executable = ""
     if !exists('g:vim9_fuzzy_exe_path')
