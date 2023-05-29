@@ -388,8 +388,7 @@ def BlockInput(cfg: dict<any>): void
                     var lines_for_paste = readfile(file_name)
                     if input == "\<CR>"
                         CloseWindow()
-                        execute "normal! o"
-                        setline(line('.'), lines_for_paste)
+                        append(line('.'), lines_for_paste)
                     elseif input == "\<C-t>"
                         CloseWindow()
                         system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
