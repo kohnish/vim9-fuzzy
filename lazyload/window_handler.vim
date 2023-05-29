@@ -29,7 +29,9 @@ enddef
 
 def GetRootdir(): string
     var root_dir = ""
-    if exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
+    if exists('g:vim9fuzzy_get_proj_root_func') && g:vim9fuzzy_get_proj_root_func
+        root_dir = g:Vim9FuzzyGetProjRootFunc()
+    elseif exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
         root_dir = g:vim9_fuzzy_proj_dir
     else
         root_dir = getcwd()
