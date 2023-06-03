@@ -53,7 +53,7 @@ noremap <C-k> :Vim9FuzzyPwdFile<CR>
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
-# For fuzzy yank history search
+# For fuzzy yank history search (No windows support)
 # Enable yank hook (Default false)
 g:vim9_fuzzy_yank_enabled = true
 noremap <C-y> :Vim9FuzzyYank<CR>

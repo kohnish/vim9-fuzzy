@@ -6,9 +6,27 @@ set(src
     search_helper.c
     fuzzy.c
     mru.c
-    yank.c
     str_pool.c
     )
+
+    get_cmake_property(_variableNames VARIABLES)
+    list (SORT _variableNames)
+    foreach (_variableName ${_variableNames})
+        if (ARGV0)
+            unset(MATCHED)
+            string(REGEX MATCH ${ARGV0} MATCHED ${_variableName})
+            if (NOT MATCHED)
+                continue()
+            endif()
+        endif()
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+
+if(NOT WIN32)
+    list(APPEND src
+        yank.c
+    )
+endif()
 
 set(lib
     uv
