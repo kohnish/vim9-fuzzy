@@ -6,9 +6,14 @@ set(src
     search_helper.c
     fuzzy.c
     mru.c
-    yank.c
     str_pool.c
     )
+
+if(NOT WIN32)
+    list(APPEND src
+        yank.c
+    )
+endif()
 
 set(lib
     uv
