@@ -2,7 +2,6 @@
 #include "fuzzy.h"
 #include "mru.h"
 #include "search_helper.h"
-#include "yank.h"
 #include <jsmn.h>
 #include <limits.h>
 #include <stdio.h>
@@ -10,6 +9,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <uv.h>
+#ifndef _WIN32
+#include "yank.h"
+#endif
 
 #define MAX_JSON_TOKENS 128
 #define MAX_JSON_ELM_SIZE PATH_MAX
@@ -137,28 +139,34 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         queue_mru_search(loop, "", mru_path, seq);
     } else if (strcmp(cmd, "write_mru") == 0) {
         write_mru(mru_path, value);
-    } else if (strcmp(cmd, "init_yank") == 0) {
-        queue_yank_search(loop, "", yank_path, seq);
     } else if (strcmp(cmd, "mru") == 0) {
         queue_mru_search(loop, value, mru_path, seq);
+#ifndef _WIN32
+    } else if (strcmp(cmd, "init_yank") == 0) {
+        queue_yank_search(loop, "", yank_path, seq);
     } else if (strcmp(cmd, "yank") == 0) {
         queue_yank_search(loop, value, yank_path, seq);
+#endif
     }
 }
 
 void init_handlers(void) {
     init_file_mutex();
     init_mru_mutex();
-    init_yank_mutex();
     init_cancel_mutex();
+#ifndef _WIN32
+    init_yank_mutex();
+#endif
 }
 
 void deinit_handlers(void) {
     deinit_file();
     deinit_mru();
-    deinit_yank();
     deinit_file_mutex();
     deinit_mru_mutex();
-    deinit_yank_mutex();
     deinit_cancel_mutex();
+#ifndef _WIN32
+    deinit_yank();
+    deinit_yank_mutex();
+#endif
 }
