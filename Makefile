@@ -6,7 +6,7 @@ macports-vim9-fuzzy:
 
 online-build:
 	rm -rf build
-	cmake -GNinja -Bbuild -DBUILD_STATIC=ON
+	cmake -Bbuild -DBUILD_STATIC=ON
 	cmake --build build --target install
 
 linux-download:

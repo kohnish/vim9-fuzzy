@@ -109,7 +109,7 @@ Build requirements
  - CMake
  - pkg-config
  - C compiler (GCC / Clang)
- - Ninja (Only for make online-build target)
+ - Ninja
  - C++ compiler (Optional for test)  
 
 Build (static build(needs internet access))
