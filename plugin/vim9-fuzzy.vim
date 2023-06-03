@@ -6,6 +6,7 @@ command! -complete=file -nargs=* Vim9FuzzyPwdFile window_handler.StartWindow("fi
 command! -complete=file -nargs=* Vim9FuzzyMru window_handler.StartWindow("mru", <f-args>)
 command! -nargs=* Vim9FuzzyPath window_handler.StartWindow("path", <f-args>)
 command! -nargs=* Vim9FuzzyYank window_handler.StartWindow("yank", <f-args>)
+command! -nargs=* Vim9FuzzyStop window_handler.StopVim9Fuzzy()
 
 if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
     augroup Vim9FuzzyYank
@@ -15,9 +16,7 @@ if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
 endif
 
 def Make(...args: list<any>): void
-    const proj_root = expand('<script>:p:h') .. "/../"
-    var cmd = "sh -c 'cd " .. proj_root .. " && make -j4 " .. join(args) .. "'"
-    execute "!" .. cmd
+    execute "!" .. "sh -c 'cd " ..  expand('<script>:p:h') .. "/../" .. " && make -j4 " .. join(args) .. "'"
 enddef
 
 command! -nargs=* Vim9FuzzyMake Make(<q-args>)

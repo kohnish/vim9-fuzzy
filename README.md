@@ -108,25 +108,19 @@ Build requirements
 ------------------
  - CMake
  - pkg-config
+ - make / ninja
  - C compiler (GCC / Clang)
- - Ninja
  - C++ compiler (Optional for test)  
 
 Build (static build(needs internet access))
 ```shell
-mkdir build
-cd build
-cmake -DBUILD_STATIC=ON ..
-make -j`nproc`
-make install/strip
+cmake -Bbuild -DBUILD_STATIC=ON
+cmake --build build --target install/strip
 ```
 
 Build (dynamic build(Fedora))
 ```shell
-mkdir build
-cd build
 sudo dnf install -y libuv-devel
-cmake ..
-make -j`nproc`
-make install/strip
+cmake -Bbuild -DBUILD_STATIC=ON
+cmake --build build --target install/strip
 ```

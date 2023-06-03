@@ -7,7 +7,7 @@ macports-vim9-fuzzy:
 online-build:
 	rm -rf build
 	cmake -Bbuild -DBUILD_STATIC=ON
-	cmake --build build --target install
+	cmake --build build --target install/strip
 
 linux-download:
 	mkdir -p bin
