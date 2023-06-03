@@ -5,7 +5,7 @@ import "./window_handler.vim"
 var g_channel: channel
 const g_default_executable_path = fnamemodify(resolve(expand('<script>:p')), ':h') .. "/../bin/vim9-fuzzy"
 
-export def StartFinderProcess(): void
+export def StartFinderProcess(): channel
     var job_opt = {
         "out_mode": "lsp",
         "in_mode": "lsp",
@@ -22,6 +22,7 @@ export def StartFinderProcess(): void
     endif
     var job = job_start([executable], job_opt)
     g_channel = job_getchannel(job)
+    return g_channel
 enddef
 
 export def WriteToChannel(msg: dict<any>, ctx: dict<any>, Cb: func): void

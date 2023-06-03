@@ -2,7 +2,7 @@ vim9script
 
 import "./job_handler.vim"
 
-var g_initialised = false
+var g_channel: channel
 const g_script_dir = expand('<script>:p:h')
 
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
@@ -419,9 +419,8 @@ def BlockInput(cfg: dict<any>): void
 enddef
 
 def InitProcess(): void
-    if !g_initialised
-        job_handler.StartFinderProcess()
-        g_initialised = true
+    if ch_status(g_channel) != "open"
+        g_channel = job_handler.StartFinderProcess()
     endif
 enddef
 
