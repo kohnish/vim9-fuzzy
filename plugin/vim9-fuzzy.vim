@@ -16,9 +16,8 @@ endif
 
 def Make(...args: list<any>): void
     const proj_root = expand('<script>:p:h') .. "/../"
-    execute "cd " .. proj_root
-    execute "make " .. join(args)
-    cd -
+    var cmd = "sh -c 'cd " .. proj_root .. " && make -j4 " .. join(args) .. "'"
+    execute "!" .. cmd
 enddef
 
 command! -nargs=* Vim9FuzzyMake Make(<q-args>)
