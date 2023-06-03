@@ -26,26 +26,17 @@ Installation:
 ```sh
 mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
-# For Linux 
-curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.9/vim9-fuzzy-linux-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy 
-chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy
-<!-- # For Windows (not built anymore) -->
-<!-- curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v0.7/vim9-fuzzy-win-x86-64 -o ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe -->
-<!-- chmod +x ~/.vim/pack/plugins/opt/vim9-fuzzy/bin/vim9-fuzzy.exe -->
-# Or see the build section for compiling locally
+add `packadd! vim9-fuzzy` in your vimrc
 
+# For Linux, there is prebuilt binary
+:Vim9fuzzyMake linux-download
 
+# For other setup, compile the project and install. (Check the build requirement for details)
+:Vim9fuzzyMake online-build
 ```
-Configuration
+
+Optional Configuration
 ```vim
-## Required configurations
-
-# Enable vim9-fuzzy
-packadd! vim9-fuzzy
-
-
-## Optional settings
-
 # Vim9-fuzzy Keymap (No defaults)
 # Search by only file name.
 noremap <C-f> :Vim9FuzzyFile<CR>
@@ -115,8 +106,8 @@ Build requirements
  - CMake
  - pkg-config
  - C compiler (GCC / Clang)
+ - Ninja (Only for make online-build target)
  - C++ compiler (Optional for test)  
-  
 
 Build (static build(needs internet access))
 ```shell
