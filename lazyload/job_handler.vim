@@ -2,10 +2,9 @@ vim9script
 
 import "./window_handler.vim"
 
-var g_channel: channel
 const g_default_executable_path = fnamemodify(resolve(expand('<script>:p')), ':h') .. "/../bin/vim9-fuzzy"
 
-export def StartFinderProcess(): channel
+export def StartFinderProcess(): dict<any>
     var job_opt = {
         "out_mode": "lsp",
         "in_mode": "lsp",
@@ -21,14 +20,13 @@ export def StartFinderProcess(): channel
         executable = g:vim9_fuzzy_exe_path
     endif
     var job = job_start([executable], job_opt)
-    g_channel = job_getchannel(job)
-    return g_channel
+    return { "job": job, "channel": job_getchannel(job) }
 enddef
 
 export def WriteToChannel(msg: dict<any>, ctx: dict<any>, Cb: func): void
     var opt = {
         "callback": (channel: channel, result_msg: dict<any>) => Cb(ctx, result_msg),
     }
-    ch_sendexpr(g_channel, msg, opt)
+    ch_sendexpr(ctx.channel, msg, opt)
 enddef
 

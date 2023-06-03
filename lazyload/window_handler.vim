@@ -2,7 +2,9 @@ vim9script
 
 import "./job_handler.vim"
 
-var g_channel: channel
+var CHANNEL_NULL: channel
+var JOB_NULL: job
+var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
@@ -49,7 +51,7 @@ def GetYankPath(): string
     return persist_path
 enddef
 
-def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string): dict<any>
+def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>): dict<any>
     var mru_path = ""
     if exists('g:vim9_fuzzy_mru_path')
         mru_path = g:vim9_fuzzy_mru_path
@@ -66,6 +68,8 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
         "mru_path": mru_path,
         "yank_path": yank_path,
         "mode": mode,
+        "channel": channel.channel,
+        "job": channel.job,
     }
 enddef
 
@@ -418,10 +422,11 @@ def BlockInput(cfg: dict<any>): void
     endwhile
 enddef
 
-def InitProcess(): void
-    if ch_status(g_channel) != "open"
+def InitProcess(): dict<any>
+    if ch_status(g_channel.channel) != "open"
         g_channel = job_handler.StartFinderProcess()
     endif
+    return g_channel
 enddef
 
 
@@ -431,9 +436,8 @@ export def StartWindow(...args: list<string>): void
     if len(args) > 1
         target_dir = args[1]
     endif
-    InitProcess()
-    # Target dir not implemented yet
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode)
+    var channel = InitProcess()
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel)
     InitWindow(cfg)
     try
         BlockInput(cfg)
@@ -454,5 +458,14 @@ export def Osc52YankHist(contents: list<any>): void
     # ToDo: make the max num configurable and stop using unix commands.
     if len(files) > 50
         system("rm -f \"`ls -1tr " .. yank_path .. "/* |head -n1`\"")
+    endif
+enddef
+
+export def StopVim9Fuzzy(): void
+    if ch_status(g_channel.channel) == "open"
+        job_stop(g_channel.job, "int")
+        echom "Stopped vim9-fuzzy"
+    else
+        echom "Vim9-fuzzy is already stopped"
     endif
 enddef
