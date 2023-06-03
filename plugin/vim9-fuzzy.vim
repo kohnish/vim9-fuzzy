@@ -13,3 +13,12 @@ if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
         autocmd TextYankPost * window_handler.Osc52YankHist(v:event.regcontents)
     augroup END
 endif
+
+def Make(...args: list<any>): void
+    const proj_root = expand('<script>:p:h') .. "/../"
+    execute "cd " .. proj_root
+    execute "make " .. join(args)
+    cd -
+enddef
+
+command! -nargs=* Vim9FuzzyMake Make(<q-args>)
