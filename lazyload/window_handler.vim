@@ -181,9 +181,9 @@ def InitWindow(cfg: dict<any>): void
 enddef
 
 def CloseWindow(): void
-     bdelete
-     echohl Normal | echon '' | echohl NONE
-     redraw
+    bdelete
+    echohl Normal | echon '' | echohl NONE
+    redraw
 enddef
 
 def SendCharMsg(cfg: dict<any>, msg: string): void
