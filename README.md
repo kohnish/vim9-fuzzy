@@ -28,10 +28,13 @@ mkdir -p ~/.vim/pack/plugins/opt
 git clone https://github.com/kohnish/vim9-fuzzy ~/.vim/pack/plugins/opt/vim9-fuzzy
 add `packadd! vim9-fuzzy` in your vimrc
 
+# For platforms with libuv-devel in the library path
+:Vim9fuzzyMake
+
 # For Linux, there is prebuilt binary
 :Vim9fuzzyMake linux-download
 
-# For other setup, compile the project and install. (Check the build requirement for details)
+# Or just compile static binary and install. (Check the build requirement for details)
 :Vim9fuzzyMake online-build
 ```
 
