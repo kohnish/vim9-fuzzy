@@ -8,8 +8,8 @@ var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
-    if exists('g:vim9fuzzy_user_list_func') && g:vim9fuzzy_user_list_func
-        return g:Vim9fuzzy_user_list_func(root_dir, target_dir)
+    if exists('g:vim9_fuzzy_list_func') && g:vim9_fuzzy_list_func
+        return g:Vim9_fuzzy_list_func(root_dir, target_dir)
     endif
 
     # Default
@@ -31,8 +31,8 @@ enddef
 
 def GetRootdir(): string
     var root_dir = ""
-    if exists('g:vim9fuzzy_get_proj_root_func') && g:vim9fuzzy_get_proj_root_func
-        root_dir = g:Vim9FuzzyGetProjRootFunc()
+    if exists('g:vim9_fuzzy_get_proj_root_func') && g:vim9_fuzzy_get_proj_root_func
+        root_dir = g:Vim9_fuzzy_get_proj_root_func()
     elseif exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
         root_dir = g:vim9_fuzzy_proj_dir
     else
@@ -176,7 +176,7 @@ def InitWindow(cfg: dict<any>): void
     InitPrompt()
     var cmd = "init_" .. cfg.mode
     var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(msg2send, cfg, PrintResult)
+    job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
     redraw
 enddef
 
@@ -192,7 +192,7 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
         cmd = "init_" .. cmd
     endif
     var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(msg2send, cfg, PrintResult)
+    job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
 enddef
 
 def PrintFakePrompt(line: string, cursor_pos: number): void
@@ -406,7 +406,7 @@ def BlockInput(cfg: dict<any>): void
             CloseWindow()
             if filereadable(file_full_path)
                 var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
-                job_handler.WriteToChannel(mru_msg, cfg, PrintResult)
+                job_handler.WriteToChannel(cfg.channel, mru_msg, cfg, PrintResult)
                 if input == "\<CR>"
                     FocusOrOpen(file_full_path)
                 elseif input == "\<C-]>"
@@ -428,7 +428,6 @@ def InitProcess(): dict<any>
     endif
     return g_channel
 enddef
-
 
 export def StartWindow(...args: list<string>): void
     var mode = args[0]
