@@ -370,10 +370,10 @@ def BlockInput(cfg: dict<any>): void
         elseif input == "\<ESC>"
             CloseWindow()
             break
-        elseif input == "\<C-k>"
+        elseif input == "\<C-k>" || input == "\<C-p>"
             norm k
             redraw
-        elseif input == "\<C-j>"
+        elseif input == "\<C-j>" || input == "\<C-n>"
             norm j
             redraw
         elseif input == "\<CR>" || input == "\<C-t>" || input == "\<C-]>"
