@@ -18,7 +18,7 @@ ToDo
 Runtime requirements
 --------------------
  - Vim with vim9 script support
- - Rg (Only for the default list command, can be overridden by Vim9fuzzy_user_list_func)
+ - Rg (Only for the default list command, can be overridden by Vim9_fuzzy_user_list_func)
 
 Usage
 -----
@@ -69,8 +69,8 @@ endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
 # To set root of search path on every vim9-fuzzy window is opened in case vim current dir changes.
-g:vim9fuzzy_get_proj_root_func = true
-def g:Vim9FuzzyGetProjRootFunc(): string
+g:vim9_fuzzy_get_proj_root_func = true
+def g:Vim9_fuzzy_get_proj_root_func(): string
     var root_dir = getcwd()
     var git_root_dir = trim(system(exepath("git") .. " -C " .. root_dir .. " rev-parse --show-toplevel 2>/dev/null"))
     if !empty(git_root_dir)
@@ -80,8 +80,8 @@ def g:Vim9FuzzyGetProjRootFunc(): string
 enddef
 
 # Override defaut list cmd (defaults to rg)
-g:vim9fuzzy_user_list_func = true
-def g:Vim9fuzzy_user_list_func(root_dir: string, target_dir: string): dict<any>
+g:vim9_fuzzy_list_func = true
+def g:Vim9_fuzzy_list_func(root_dir: string, target_dir: string): dict<any>
     var git_exe = exepath("git")
     var dir = target_dir
     if dir == ""

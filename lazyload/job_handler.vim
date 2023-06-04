@@ -23,10 +23,9 @@ export def StartFinderProcess(): dict<any>
     return { "job": job, "channel": job_getchannel(job) }
 enddef
 
-export def WriteToChannel(msg: dict<any>, ctx: dict<any>, Cb: func): void
+export def WriteToChannel(ch: channel, msg: dict<any>, ctx: dict<any>, Cb: func): void
     var opt = {
         "callback": (channel: channel, result_msg: dict<any>) => Cb(ctx, result_msg),
     }
-    ch_sendexpr(ctx.channel, msg, opt)
+    ch_sendexpr(ch, msg, opt)
 enddef
-
