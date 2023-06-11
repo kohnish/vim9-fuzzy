@@ -150,7 +150,7 @@ enddef
 
 def InitWindow(cfg: dict<any>): void
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    resize 20
+    execute "resize " .. get(g:, 'vim9_fuzzy_win_height', 20)
 
     setlocal statusline=\ \ Vim9\ Fuzzy
     setlocal nobuflisted
