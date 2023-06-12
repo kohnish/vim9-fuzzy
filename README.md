@@ -124,3 +124,10 @@ sudo dnf install -y libuv-devel
 cmake -Bbuild -DBUILD_STATIC=ON
 cmake --build build --target install/strip
 ```
+
+Build (dynamic build(MSYS)
+```shell
+cmake -GNinja -Bbuild -DBUILD_STATIC=OFF -DUSE_LOCAL_JSMN=OFF
+cmake --build build --target install/strip
+```
+
