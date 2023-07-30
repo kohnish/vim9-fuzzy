@@ -7,6 +7,13 @@ var JOB_NULL: job
 var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 
+
+const g_select_keymap = {
+    "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
+    "tabedit": get(g:, 'vim9_fuzzy_tabedit_key', "\<C-t>"),
+    "botright_vsp": get(g:, 'vim9_fuzzy_botright_vsp_key', "\<C-]>")
+}
+
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     if exists('g:vim9_fuzzy_list_func') && g:vim9_fuzzy_list_func
         return g:Vim9_fuzzy_list_func(root_dir, target_dir)
@@ -376,13 +383,16 @@ def BlockInput(cfg: dict<any>): void
         elseif input == "\<C-j>" || input == "\<C-n>"
             norm j
             redraw
-        elseif input == "\<CR>" || input == "\<C-t>" || input == "\<C-]>"
+        elseif index(values(g_select_keymap), input) >= 0
             if current_line == ":q"
                 CloseWindow()
                 break
             endif
 
             var line = getline(".")
+            if empty(line)
+                continue
+            endif
 
             if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
                 if cfg.mode == "yank"
@@ -390,10 +400,10 @@ def BlockInput(cfg: dict<any>): void
                     var result_lines = split(for_paste, "|")
                     var file_name = cfg.yank_path .. "/" .. result_lines[0]
                     var lines_for_paste = readfile(file_name)
-                    if input == "\<CR>"
+                    if input == g_select_keymap["edit"]
                         CloseWindow()
                         append(line('.'), lines_for_paste)
-                    elseif input == "\<C-t>"
+                    elseif input == g_select_keymap["tabedit"]
                         CloseWindow()
                         system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
                     endif
@@ -407,11 +417,11 @@ def BlockInput(cfg: dict<any>): void
             if filereadable(file_full_path)
                 var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
                 job_handler.WriteToChannel(cfg.channel, mru_msg, cfg, PrintResult)
-                if input == "\<CR>"
+                if input == g_select_keymap["edit"]
                     FocusOrOpen(file_full_path)
-                elseif input == "\<C-]>"
+                elseif input == g_select_keymap["botright_vsp"]
                     execute 'botright vsp ' .. file_full_path
-                elseif input == "\<C-t>"
+                elseif input == g_select_keymap["tabedit"]
                     execute 'tabedit ' .. file_full_path
                 endif
             else
