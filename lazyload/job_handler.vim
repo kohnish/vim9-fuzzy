@@ -23,19 +23,15 @@ export def StartFinderProcess(): dict<any>
     return { "job": job, "channel": job_getchannel(job) }
 enddef
 
-var g_flush_timers = {"file": -1}
+var g_flush_timers = {}
 export def WriteToChannel(ch: channel, msg: dict<any>, ctx: dict<any>, Cb: func): void
     var opt = {
         "callback": (channel: channel, result_msg: dict<any>) => Cb(ctx, result_msg),
     }
     var msg_kind = msg["cmd"]
-    if msg_kind == "file"
-        var timer = g_flush_timers[msg_kind]
-        if !empty(timer_info(timer))
-            timer_stop(timer)
-        endif
-        g_flush_timers[msg_kind] = timer_start(10, (_) => ch_sendexpr(ch, msg, opt))
-    else
-        ch_sendexpr(ch, msg, opt)
+    var timer = get(g_flush_timers, msg_kind, -1)
+    if !empty(timer_info(timer))
+        timer_stop(timer)
     endif
+    g_flush_timers[msg_kind] = timer_start(10, (_) => ch_sendexpr(ch, msg, opt))
 enddef
