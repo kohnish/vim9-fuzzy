@@ -272,8 +272,8 @@ def FocusOrOpen(filename: string): void
     var f_ret = FocusIfOpen(filename)
     if f_ret == WIN_FOCUSED_ON_MODIFIABLE
         execute "edit " .. filename
-    elseif f_ret == WIN_NOT_FOUND
-        execute 'vsplit ' .. filename
+    else
+        execute 'split ' .. filename
     endif
 enddef
 
