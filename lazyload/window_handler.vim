@@ -270,6 +270,9 @@ enddef
 
 def FocusOrOpen(filename: string): void
     var f_ret = FocusIfOpen(filename)
+    if f_ret == WIN_ALREADY_FOCUSED
+        return
+    endif
     if f_ret == WIN_FOCUSED_ON_MODIFIABLE
         execute "edit " .. filename
     else
