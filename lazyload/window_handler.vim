@@ -273,7 +273,7 @@ def FocusOrOpen(filename: string): void
     if f_ret == WIN_FOCUSED_ON_MODIFIABLE
         execute "edit " .. filename
     else
-        execute 'split ' .. filename
+        execute 'botright vsp ' .. filename
     endif
 enddef
 
