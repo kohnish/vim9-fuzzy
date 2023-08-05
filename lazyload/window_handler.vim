@@ -58,7 +58,7 @@ def GetYankPath(): string
     return persist_path
 enddef
 
-def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>): dict<any>
+def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number): dict<any>
     var mru_path = ""
     if exists('g:vim9_fuzzy_mru_path')
         mru_path = g:vim9_fuzzy_mru_path
@@ -70,6 +70,7 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
     # All const members
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
+        "buf_id": buf_nr,
         "root_dir": root_dir,
         "target_dir": target_dir,
         "mru_path": mru_path,
@@ -118,10 +119,7 @@ def CountCharUntil(line: string, char: string): number
 enddef
 
 export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
-    var buf_id = bufnr("Vim9 Fuzzy")
-    if buf_id == -1
-        return
-    endif
+    var buf_id = ctx.buf_id
     deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
         clearmatches()
@@ -155,8 +153,7 @@ def InitPrompt(): void
     echohl Constant | echon '>> ' | echohl NONE
 enddef
 
-def InitWindow(cfg: dict<any>): void
-    noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
+def ConfigureWindow(cfg: dict<any>): void
     execute "resize " .. get(g:, 'vim9_fuzzy_win_height', 20)
 
     setlocal statusline=\ \ Vim9\ Fuzzy
@@ -449,8 +446,9 @@ export def StartWindow(...args: list<string>): void
         target_dir = args[1]
     endif
     var channel = InitProcess()
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel)
-    InitWindow(cfg)
+    noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr())
+    ConfigureWindow(cfg)
     try
         BlockInput(cfg)
     catch /^Vim:Interrupt$/
