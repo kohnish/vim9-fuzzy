@@ -49,14 +49,19 @@ noremap <C-p> :Vim9FuzzyPath<CR>
 noremap <C-e> :Vim9FuzzyMru<CR>
 # Search in the directory of the current dir
 noremap <C-k> :Vim9FuzzyPwdFile<CR>
+
 # Search window height
 g:vim9_fuzzy_win_height = 15
+
 # Override select keys
 g:vim9_fuzzy_edit_key = "\<CR>"
 g:vim9_fuzzy_botright_vsp_key = "\<C-v>"
 g:vim9_fuzzy_tabedit_key = "\<C-t>"
 g:vim9_fuzzy_yank_paste_key = "\<CR>"
 g:vim9_fuzzy_yank_only_key = "\<C-t>"
+
+# Enable preview window
+g:vim9_fuzzy_enable_preview = true
 
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
