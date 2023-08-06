@@ -6,6 +6,7 @@ var CHANNEL_NULL: channel
 var JOB_NULL: job
 var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
+const g_preview_enabled = get(g:, 'vim9_fuzzy_enable_preview', false)
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -116,6 +117,24 @@ def IntToBin(n: number, fill_len: number): list<any>
     return reverse(bin_list)
 enddef
 
+def OpenPreviewForCurrentLine(ctx: dict<any>): void
+    if !g_preview_enabled
+        return
+    endif
+    var line = getline(".")
+    if ctx.mode == "yank"
+        if !empty(line)
+            var result_lines = split(line, "|")
+            line = ctx.yank_path .. "/" .. result_lines[0]
+        endif
+    endif
+    if filereadable(line)
+        execute "silent topleft noswapfile noautocmd keepalt keepjumps pedit " .. fnameescape(line)
+        return
+    endif
+    execute "silent topleft noswapfile noautocmd keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
+enddef
+
 def CountCharUntil(line: string, char: string): number
     var counter = 0
     for i in range(len(line))
@@ -154,6 +173,8 @@ export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
         endfor
         setbufline(buf_id, 1, lines)
     endif
+    redraw
+    OpenPreviewForCurrentLine(ctx)
     redraw
 enddef
 
@@ -195,6 +216,7 @@ def ConfigureWindow(cfg: dict<any>): void
 enddef
 
 def CloseWindow(): void
+    pclose
     bdelete
     echohl Normal | echon '' | echohl NONE
     redraw
@@ -287,6 +309,7 @@ def FocusOrOpen(filename: string): void
     endif
 enddef
 
+var g_pedit_timers = {"line": "", "timer": -1}
 def BlockInput(cfg: dict<any>): void
     var current_line = ""
     var fake_cursor_position = 0
@@ -374,9 +397,11 @@ def BlockInput(cfg: dict<any>): void
             clearmatches()
         elseif input == "\<C-j>" || input == "\<C-n>" || input == "\<ScrollWheelDown>" || input == "\<Down>"
             normal j
+            OpenPreviewForCurrentLine(cfg)
             redraw
         elseif input == "\<Up>" || input == "\<ScrollWheelUp>" || input == "\<C-k>" || input == "\<C-p>"
             normal k
+            OpenPreviewForCurrentLine(cfg)
             redraw
         elseif input == "\<ESC>"
             CloseWindow()
