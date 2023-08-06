@@ -12,13 +12,16 @@ const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
     "tabedit": get(g:, 'vim9_fuzzy_tabedit_key', "\<C-t>"),
     "botright_vsp": get(g:, 'vim9_fuzzy_botright_vsp_key', "\<C-]>"),
-    "yank_paste": get(g:, 'vim9_fuzzy_yank_paste_key', "\<CR>"),
-    "yank_only": get(g:, 'vim9_fuzzy_yank_only_key', "\<C-t>"),
+}
+
+const g_yank_keymap = {
+    "paste": get(g:, 'vim9_fuzzy_yank_paste_key', "\<CR>"),
+    "copy": get(g:, 'vim9_fuzzy_yank_only_key', "\<C-t>"),
 }
 
 def Is_yank_and_select(input: string, cfg: dict<any>): bool
     if cfg.mode == "yank"
-        if input == g_select_keymap["yank_paste"] || input == g_select_keymap["yank_only"]
+        if input == g_yank_keymap["paste"] || input == g_yank_keymap["copy"]
             return true
         endif
     endif
@@ -422,10 +425,10 @@ def BlockInput(cfg: dict<any>): void
                 var result_lines = split(for_paste, "|")
                 var file_name = cfg.yank_path .. "/" .. result_lines[0]
                 var lines_for_paste = readfile(file_name)
-                if input == g_select_keymap["yank_paste"]
+                if input == g_yank_keymap["paste"]
                     CloseWindow()
                     append(line('.'), lines_for_paste)
-                elseif input == g_select_keymap["yank_only"]
+                elseif input == g_yank_keymap["copy"]
                     CloseWindow()
                     system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
                 else
