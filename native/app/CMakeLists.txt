@@ -12,6 +12,7 @@ set(src
 if(NOT WIN32)
     list(APPEND src
         yank.c
+        grep.c
     )
 endif()
 

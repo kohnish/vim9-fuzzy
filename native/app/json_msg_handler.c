@@ -1,4 +1,5 @@
 #include "json_msg_handler.h"
+#include "grep.h"
 #include "fuzzy.h"
 #include "mru.h"
 #include "search_helper.h"
@@ -100,9 +101,10 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         return;
     }
 
-    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
         toggle_cancel(1);
-        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+        toggle_grep_cancel(1);
+        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
             usleep(1000);
         }
     }
@@ -135,6 +137,8 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
         queue_search(loop, cmd, value, list_cmd, seq);
+    } else if (strcmp(cmd, "grep") == 0) {
+        queue_grep(loop, cmd, list_cmd, seq);
     } else if (strcmp(cmd, "init_mru") == 0) {
         queue_mru_search(loop, "", mru_path, seq);
     } else if (strcmp(cmd, "write_mru") == 0) {
@@ -156,6 +160,7 @@ void init_handlers(void) {
     init_cancel_mutex();
 #ifndef _WIN32
     init_yank_mutex();
+    init_grep_mutex();
 #endif
 }
 
@@ -168,5 +173,6 @@ void deinit_handlers(void) {
 #ifndef _WIN32
     deinit_yank();
     deinit_yank_mutex();
+    deinit_grep_mutex();
 #endif
 }

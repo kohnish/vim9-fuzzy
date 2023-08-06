@@ -32,6 +32,28 @@ def Is_yank_and_select(input: string, cfg: dict<any>): bool
     return false
 enddef
 
+def GetGrepCmdStr(keyword: string, root_dir: string, target_dir: string): dict<any>
+    if exists('g:vim9_fuzzy_grep_func') && g:vim9_fuzzy_grep_func
+        return g:Vim9_fuzzy_grep_func(root_dir, target_dir)
+    endif
+
+    # Default
+    var git_cmd = "git"
+    if has("win64") || has("win32") || has("win16")
+        git_cmd = git_cmd .. ".exe"
+    endif
+    if target_dir == ""
+        return {
+            "trim_target_dir": true,
+            "cmd": "sh -c 'cd " .. root_dir .. " && git grep -n " .. keyword .. "'",
+        }
+    endif
+    return {
+        "trim_target_dir": false,
+        "cmd": "git grep -n " .. keyword
+    }
+enddef
+
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     if exists('g:vim9_fuzzy_list_func') && g:vim9_fuzzy_list_func
         return g:Vim9_fuzzy_list_func(root_dir, target_dir)
@@ -139,6 +161,17 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
     else
         execute "setlocal previewheight=" .. g_file_preview_height
     endif
+    if cfg.mode == "grep"
+        if !empty(line)
+            var lines = split(line, ":")
+            if len(lines) > 0
+                if cfg.list_cmd["trim_target_dir"]
+                    line = cfg.root_dir .. "/" .. lines[0]
+                endif
+            endif
+        endif
+    endif
+
     if filereadable(line)
         execute "silent topleft noswapfile keepalt keepjumps pedit " .. fnameescape(line)
         return
@@ -239,6 +272,12 @@ enddef
 
 def SendCharMsg(cfg: dict<any>, msg: string): void
     var cmd = cfg.mode
+    if cmd == "grep"
+        cfg.list_cmd = GetGrepCmdStr(msg, cfg.root_dir, cfg.target_dir)
+        var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
+        job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
+        return
+    endif
     if len(msg) == 0
         cmd = "init_" .. cmd
     endif
