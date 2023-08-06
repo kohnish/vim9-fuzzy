@@ -7,12 +7,22 @@ var JOB_NULL: job
 var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 
-
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
     "tabedit": get(g:, 'vim9_fuzzy_tabedit_key', "\<C-t>"),
-    "botright_vsp": get(g:, 'vim9_fuzzy_botright_vsp_key', "\<C-]>")
+    "botright_vsp": get(g:, 'vim9_fuzzy_botright_vsp_key', "\<C-]>"),
+    "yank_paste": get(g:, 'vim9_fuzzy_yank_paste_key', "\<CR>"),
+    "yank_only": get(g:, 'vim9_fuzzy_yank_only_key', "\<C-t>"),
 }
+
+def Is_yank_and_select(input: string, cfg: dict<any>): bool
+    if cfg.mode == "yank"
+        if input == g_select_keymap["yank_paste"] || input == g_select_keymap["yank_only"]
+            return true
+        endif
+    endif
+    return false
+enddef
 
 def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
     if exists('g:vim9_fuzzy_list_func') && g:vim9_fuzzy_list_func
@@ -362,28 +372,16 @@ def BlockInput(cfg: dict<any>): void
                 PrintFakePrompt(current_line, fake_cursor_position)
             endif
             clearmatches()
-        elseif input == "\<Down>"
+        elseif input == "\<C-j>" || input == "\<C-n>" || input == "\<ScrollWheelDown>" || input == "\<Down>"
             normal j
             redraw
-        elseif input == "\<Up>"
+        elseif input == "\<Up>" || input == "\<ScrollWheelUp>" || input == "\<C-k>" || input == "\<C-p>"
             normal k
-            redraw
-        elseif input == "\<ScrollWheelUp>"
-            norm k
-            redraw
-        elseif input == "\<ScrollWheelDown>"
-            norm j
             redraw
         elseif input == "\<ESC>"
             CloseWindow()
             break
-        elseif input == "\<C-k>" || input == "\<C-p>"
-            norm k
-            redraw
-        elseif input == "\<C-j>" || input == "\<C-n>"
-            norm j
-            redraw
-        elseif index(values(g_select_keymap), input) >= 0
+        elseif index(values(g_select_keymap), input) >= 0 || Is_yank_and_select(input, cfg) == true
             if current_line == ":q"
                 CloseWindow()
                 break
@@ -394,21 +392,21 @@ def BlockInput(cfg: dict<any>): void
                 continue
             endif
 
-            if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
-                if cfg.mode == "yank"
-                    var for_paste = getline('.')
-                    var result_lines = split(for_paste, "|")
-                    var file_name = cfg.yank_path .. "/" .. result_lines[0]
-                    var lines_for_paste = readfile(file_name)
-                    if input == g_select_keymap["edit"]
-                        CloseWindow()
-                        append(line('.'), lines_for_paste)
-                    elseif input == g_select_keymap["tabedit"]
-                        CloseWindow()
-                        system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
-                    endif
-                    return
+            if cfg.mode == "yank"
+                var for_paste = getline('.')
+                var result_lines = split(for_paste, "|")
+                var file_name = cfg.yank_path .. "/" .. result_lines[0]
+                var lines_for_paste = readfile(file_name)
+                if input == g_select_keymap["yank_paste"]
+                    CloseWindow()
+                    append(line('.'), lines_for_paste)
+                elseif input == g_select_keymap["yank_only"]
+                    CloseWindow()
+                    system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
+                else
+                    continue
                 endif
+                break
             endif
 
             var file_full_path = fnamemodify(GetFullPathFromResult(cfg, line, current_line), ':p')
@@ -428,6 +426,8 @@ def BlockInput(cfg: dict<any>): void
                 echom "File: " .. file_full_path .. " cannot be accessed"
             endif
             break
+        else
+            continue
         endif
     endwhile
 enddef
