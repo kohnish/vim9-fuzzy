@@ -216,9 +216,9 @@ def ConfigureWindow(cfg: dict<any>): void
 enddef
 
 def CloseWindow(): void
-    echohl Normal | echon '' | echohl NONE
     bdelete
     pclose
+    echohl Normal | echon '' | echohl NONE
     redraw
 enddef
 
