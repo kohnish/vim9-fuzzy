@@ -7,6 +7,10 @@ var JOB_NULL: job
 var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 const g_preview_enabled = get(g:, 'vim9_fuzzy_enable_preview', false)
+const g_original_preview_height = &previewheight
+const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', 20)
+const g_file_preview_height = get(g:, 'vim9_file_preview_height', 49)
+const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', 10)
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -126,16 +130,20 @@ def OpenPreviewForCurrentLine(ctx: dict<any>): void
     endif
     var line = getline(".")
     if ctx.mode == "yank"
+        execute "setlocal previewheight=" .. g_yank_preview_height
         if !empty(line)
             var result_lines = split(line, "|")
             line = ctx.yank_path .. "/" .. result_lines[0]
         endif
+    else
+        execute "setlocal previewheight=" .. g_file_preview_height
     endif
     if filereadable(line)
         execute "silent topleft noswapfile keepalt keepjumps pedit " .. fnameescape(line)
         return
     endif
     execute "silent topleft noswapfile keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
+    execute "setlocal previewheight=" .. g_original_preview_height
 enddef
 
 def CountCharUntil(line: string, char: string): number
@@ -188,7 +196,7 @@ def InitPrompt(): void
 enddef
 
 def ConfigureWindow(cfg: dict<any>): void
-    execute "resize " .. get(g:, 'vim9_fuzzy_win_height', 20)
+    execute "resize " .. g_search_window_height
 
     setlocal statusline=\ \ Vim9\ Fuzzy
     setlocal nobuflisted
