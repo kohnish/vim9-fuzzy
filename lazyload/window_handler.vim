@@ -129,10 +129,10 @@ def OpenPreviewForCurrentLine(ctx: dict<any>): void
         endif
     endif
     if filereadable(line)
-        execute "silent topleft noswapfile noautocmd keepalt keepjumps pedit " .. fnameescape(line)
+        execute "silent topleft noswapfile keepalt keepjumps pedit " .. fnameescape(line)
         return
     endif
-    execute "silent topleft noswapfile noautocmd keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
+    execute "silent topleft noswapfile keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
 enddef
 
 def CountCharUntil(line: string, char: string): number
