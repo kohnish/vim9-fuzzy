@@ -76,7 +76,7 @@ def GetYankPath(): string
     return persist_path
 enddef
 
-def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number): dict<any>
+def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number): dict<any>
     var mru_path = ""
     if exists('g:vim9_fuzzy_mru_path')
         mru_path = g:vim9_fuzzy_mru_path
@@ -88,6 +88,7 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
     # All const members
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
+        "orig_buf_id": orig_buf_id,
         "buf_id": buf_nr,
         "root_dir": root_dir,
         "target_dir": target_dir,
@@ -124,16 +125,16 @@ def IntToBin(n: number, fill_len: number): list<any>
     return reverse(bin_list)
 enddef
 
-def OpenPreviewForCurrentLine(ctx: dict<any>): void
+def OpenPreviewForCurrentLine(cfg: dict<any>): void
     if !g_preview_enabled
         return
     endif
     var line = getline(".")
-    if ctx.mode == "yank"
+    if cfg.mode == "yank"
         execute "setlocal previewheight=" .. g_yank_preview_height
         if !empty(line)
             var result_lines = split(line, "|")
-            line = ctx.yank_path .. "/" .. result_lines[0]
+            line = cfg.yank_path .. "/" .. result_lines[0]
         endif
     else
         execute "setlocal previewheight=" .. g_file_preview_height
@@ -158,8 +159,8 @@ def CountCharUntil(line: string, char: string): number
     return counter
 enddef
 
-export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
-    var buf_id = ctx.buf_id
+export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
+    var buf_id = cfg.buf_id
     deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
         clearmatches()
@@ -171,7 +172,7 @@ export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
             for j in bin_list
-                if ctx.mode == "yank" && col_counter < CountCharUntil(i["name"], '|') + 2
+                if cfg.mode == "yank" && col_counter < CountCharUntil(i["name"], '|') + 2
                     col_counter += 1
                     continue
                 endif
@@ -185,7 +186,7 @@ export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
         setbufline(buf_id, 1, lines)
     endif
     redraw
-    OpenPreviewForCurrentLine(ctx)
+    OpenPreviewForCurrentLine(cfg)
     redraw
 enddef
 
@@ -226,8 +227,11 @@ def ConfigureWindow(cfg: dict<any>): void
     redraw
 enddef
 
-def CloseWindow(): void
-    bdelete
+def CloseWindow(cfg: dict<any>): void
+    try
+        execute "silent bdelete! " .. cfg.buf_id
+    catch
+    endtry
     pclose
     echohl Normal | echon '' | echohl NONE
     redraw
@@ -415,11 +419,9 @@ def BlockInput(cfg: dict<any>): void
             OpenPreviewForCurrentLine(cfg)
             redraw
         elseif input == "\<ESC>"
-            CloseWindow()
             break
         elseif index(values(g_select_keymap), input) >= 0 || Is_yank_and_select(input, cfg) == true
             if current_line == ":q"
-                CloseWindow()
                 break
             endif
 
@@ -434,10 +436,8 @@ def BlockInput(cfg: dict<any>): void
                 var file_name = cfg.yank_path .. "/" .. result_lines[0]
                 var lines_for_paste = readfile(file_name)
                 if input == g_yank_keymap["paste"]
-                    CloseWindow()
-                    append(line('.'), lines_for_paste)
+                    appendbufline(cfg.orig_buf_id, line('.'), lines_for_paste)
                 elseif input == g_yank_keymap["copy"]
-                    CloseWindow()
                     system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
                 else
                     continue
@@ -447,10 +447,10 @@ def BlockInput(cfg: dict<any>): void
 
             var file_full_path = fnamemodify(GetFullPathFromResult(cfg, line, current_line), ':p')
 
-            CloseWindow()
             if filereadable(file_full_path)
                 var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
                 job_handler.WriteToChannel(cfg.channel, mru_msg, cfg, PrintResult)
+                CloseWindow(cfg)
                 if input == g_select_keymap["edit"]
                     FocusOrOpen(file_full_path)
                 elseif input == g_select_keymap["botright_vsp"]
@@ -482,13 +482,14 @@ export def StartWindow(...args: list<string>): void
         target_dir = args[1]
     endif
     var channel = InitProcess()
+    var orig_buf_id = bufnr()
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr())
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id)
     ConfigureWindow(cfg)
     try
         BlockInput(cfg)
-    catch /^Vim:Interrupt$/
-        CloseWindow()
+    finally
+        CloseWindow(cfg)
     endtry
 enddef
 
