@@ -55,6 +55,8 @@ g:vim9_fuzzy_win_height = 15
 g:vim9_fuzzy_edit_key = "\<CR>"
 g:vim9_fuzzy_botright_vsp_key = "\<C-v>"
 g:vim9_fuzzy_tabedit_key = "\<C-t>"
+g:vim9_fuzzy_yank_paste_key = "\<CR>"
+g:vim9_fuzzy_yank_only_key = "\<C-t>"
 
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
