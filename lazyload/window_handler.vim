@@ -201,6 +201,7 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
         g:vim9_fuzzy_preview_match_list = []
         var pedit_cmd = "call extend(g:vim9_fuzzy_preview_match_list, [matchadd('Search', '" .. cfg.current_line .. "')])"
         win_execute(cfg.pedit_win, pedit_cmd)
+        win_execute(cfg.pedit_win, "call search('" .. cfg.current_line .. "')")
     endif
     execute "setlocal previewheight=" .. g_original_preview_height
 enddef
