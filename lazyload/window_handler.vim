@@ -164,13 +164,15 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
     else
         execute "setlocal previewheight=" .. g_file_preview_height
     endif
+    var grep_line_num = 0
     if cfg.mode == "grep"
         if !empty(line)
             var lines = split(line, ":")
-            if len(lines) > 0
+            if len(lines) > 1
                 if cfg.list_cmd["trim_target_dir"]
                     line = cfg.root_dir .. "/" .. lines[0]
                 endif
+                grep_line_num = str2nr(lines[1])
             endif
         endif
     elseif cfg.mode != "mru"
@@ -201,7 +203,7 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
         g:vim9_fuzzy_preview_match_list = []
         var pedit_cmd = "call extend(g:vim9_fuzzy_preview_match_list, [matchadd('Search', '" .. cfg.current_line .. "')])"
         win_execute(cfg.pedit_win, pedit_cmd)
-        win_execute(cfg.pedit_win, "call search('" .. cfg.current_line .. "')")
+        win_execute(cfg.pedit_win, "call cursor(" .. grep_line_num .. ", 0)")
     endif
     execute "setlocal previewheight=" .. g_original_preview_height
 enddef
