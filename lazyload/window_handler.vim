@@ -11,6 +11,7 @@ const g_original_preview_height = &previewheight
 const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', 20)
 const g_file_preview_height = get(g:, 'vim9_file_preview_height', 49)
 const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', 10)
+g:vim9_fuzzy_preview_match_list = []
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -119,6 +120,8 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
         "mode": mode,
         "channel": channel.channel,
         "job": channel.job,
+        "pedit_win": -1,
+        "current_line": "",
     }
 enddef
 
@@ -170,13 +173,35 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
                 endif
             endif
         endif
+    else
+        if cfg.list_cmd["trim_target_dir"]
+            line = cfg.root_dir .. "/" .. line
+        endif
     endif
-
+    var orig_bufs = tabpagebuflist(tabpagenr())
     if filereadable(line)
         execute "silent topleft noswapfile keepalt keepjumps pedit " .. fnameescape(line)
-        return
+    else
+        execute "silent topleft noswapfile keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
     endif
-    execute "silent topleft noswapfile keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
+    if cfg.mode == "grep"
+        var new_bufs = tabpagebuflist(tabpagenr())
+        for i in new_bufs
+            if index(orig_bufs, i) == -1
+                cfg.pedit_win = bufwinid(i)
+                break
+            endif
+        endfor
+        for i in g:vim9_fuzzy_preview_match_list
+            try
+                matchdelete(i, cfg.pedit_win)
+            catch
+            endtry
+        endfor
+        g:vim9_fuzzy_preview_match_list = []
+        var pedit_cmd = "call extend(g:vim9_fuzzy_preview_match_list, [matchadd('Search', '" .. cfg.current_line .. "')])"
+        win_execute(cfg.pedit_win, pedit_cmd)
+    endif
     execute "setlocal previewheight=" .. g_original_preview_height
 enddef
 
@@ -267,10 +292,18 @@ def CloseWindow(cfg: dict<any>): void
     endtry
     pclose
     echohl Normal | echon '' | echohl NONE
+    for i in g:vim9_fuzzy_preview_match_list
+        try
+            matchdelete(i, cfg.pedit_win)
+        catch
+        endtry
+    endfor
+    g:vim9_fuzzy_preview_match_list = []
     redraw
 enddef
 
 def SendCharMsg(cfg: dict<any>, msg: string): void
+    cfg.current_line = msg
     var cmd = cfg.mode
     if cmd == "grep"
         cfg.list_cmd = GetGrepCmdStr(msg, cfg.root_dir, cfg.target_dir)
