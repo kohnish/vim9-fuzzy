@@ -86,7 +86,7 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
             file_res = realloc(file_res, sizeof(file_info_t) * current_sz);
         }
         size_t escaped_len = 0;
-        char *escaped_line = json_escape(line, strlen(line), &escaped_len);
+        char *escaped_line = json_escape(line, strlen(line) - 1, &escaped_len);
         file_res[matched_len].file_path = pool_str(&str_pool, escaped_line);
         free(escaped_line);
         file_res[matched_len].fuzzy_score = 0;
