@@ -11,7 +11,6 @@ const g_original_preview_height = &previewheight
 const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', 20)
 const g_file_preview_height = get(g:, 'vim9_file_preview_height', 49)
 const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', 10)
-g:vim9_fuzzy_preview_match_list = []
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -205,14 +204,11 @@ def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
                 break
             endif
         endfor
-        for i in g:vim9_fuzzy_preview_match_list
-            try
-                matchdelete(i, cfg.pedit_win)
-            catch
-            endtry
-        endfor
-        g:vim9_fuzzy_preview_match_list = []
-        var pedit_cmd = "call extend(g:vim9_fuzzy_preview_match_list, [matchadd('Search', '" .. cfg.current_line .. "')])"
+        try
+            clearmatches(cfg.pedit_win)
+        catch
+        endtry
+        var pedit_cmd = "call matchadd('Search', '" .. cfg.current_line .. "')"
         win_execute(cfg.pedit_win, pedit_cmd)
         win_execute(cfg.pedit_win, "call cursor(" .. grep_line_num .. ", 0)")
     endif
@@ -304,15 +300,12 @@ def CloseWindow(cfg: dict<any>): void
         execute "silent bdelete! " .. cfg.buf_id
     catch
     endtry
+    try
+        clearmatches(cfg.pedit_win)
+    catch
+    endtry
     pclose
     echohl Normal | echon '' | echohl NONE
-    for i in g:vim9_fuzzy_preview_match_list
-        try
-            matchdelete(i, cfg.pedit_win)
-        catch
-        endtry
-    endfor
-    g:vim9_fuzzy_preview_match_list = []
     redraw
 enddef
 
