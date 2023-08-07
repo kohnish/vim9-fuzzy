@@ -381,6 +381,17 @@ def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): s
         file_full_path = line
     endif
 
+    if cfg.mode == "grep"
+        var lines = split(line, ":")
+        if len(lines) > 0
+            if cfg.list_cmd["trim_target_dir"]
+                file_full_path = cfg.root_dir .. "/" .. lines[0]
+            else
+                file_full_path = lines[0]
+            endif
+        endif
+    endif
+
     return file_full_path
 enddef
 
