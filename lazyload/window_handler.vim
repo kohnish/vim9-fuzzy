@@ -163,6 +163,7 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
     OpenPreviewForCurrentLineTask(cfg)
 enddef
 
+# ToDo: Complete mess, clean up later.
 def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
     var line = getline(".")
     if cfg.mode == "yank"
@@ -185,7 +186,7 @@ def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
                 grep_line_num = str2nr(lines[1])
             endif
         endif
-    elseif cfg.mode != "mru"
+    elseif cfg.mode != "mru" && cfg.mode != "yank"
         if cfg.list_cmd["trim_target_dir"]
             line = cfg.root_dir .. "/" .. line
         endif
