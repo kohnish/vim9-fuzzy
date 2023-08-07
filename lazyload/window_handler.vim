@@ -173,7 +173,7 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
                 endif
             endif
         endif
-    else
+    elseif cfg.mode != "mru"
         if cfg.list_cmd["trim_target_dir"]
             line = cfg.root_dir .. "/" .. line
         endif
