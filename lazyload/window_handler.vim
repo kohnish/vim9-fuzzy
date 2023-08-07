@@ -150,10 +150,19 @@ def IntToBin(n: number, fill_len: number): list<any>
     return reverse(bin_list)
 enddef
 
+var g_preview_timers = {}
 def OpenPreviewForCurrentLine(cfg: dict<any>): void
     if !g_preview_enabled
         return
     endif
+    var timer = get(g_preview_timers, "preview", -1)
+    if !empty(timer_info(timer))
+        timer_stop(timer)
+    endif
+    g_preview_timers["preview"] = timer_start(30, (_) => OpenPreviewForCurrentLineTask(cfg))
+enddef
+
+def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
     var line = getline(".")
     if cfg.mode == "yank"
         execute "setlocal previewheight=" .. g_yank_preview_height
