@@ -251,6 +251,10 @@ export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
             endfor
             line_counter += 1
         endfor
+        # ToDo: stop matching with the filename part
+        if cfg.mode == "grep"
+            matchadd("matched_str_colour", cfg.current_line)
+        endif
         setbufline(buf_id, 1, lines)
     endif
     redraw
