@@ -155,11 +155,12 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
     if !g_preview_enabled
         return
     endif
-    var timer = get(g_preview_timers, "preview", -1)
-    if !empty(timer_info(timer))
-        timer_stop(timer)
-    endif
-    g_preview_timers["preview"] = timer_start(30, (_) => OpenPreviewForCurrentLineTask(cfg))
+    # var timer = get(g_preview_timers, "preview", -1)
+    # if !empty(timer_info(timer))
+    #     timer_stop(timer)
+    # endif
+    # g_preview_timers["preview"] = timer_start(30, (_) => OpenPreviewForCurrentLineTask(cfg))
+    OpenPreviewForCurrentLineTask(cfg)
 enddef
 
 def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
