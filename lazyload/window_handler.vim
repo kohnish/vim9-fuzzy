@@ -235,7 +235,7 @@ export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
     var buf_id = cfg.buf_id
     deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
-        clearmatches()
+        clearmatches(bufwinid(cfg.buf_id))
         highlight matched_str_colour guifg=red ctermfg=red term=bold gui=bold
         var line_counter = 1
         var lines = []
@@ -493,7 +493,7 @@ def BlockInput(cfg: dict<any>): void
                 fake_cursor_position = fake_cursor_position - 1
                 PrintFakePrompt(current_line, fake_cursor_position)
             endif
-            clearmatches()
+            clearmatches(bufwinid(cfg.buf_id))
         elseif input == "\<DEL>"
             if fake_cursor_position == 0 
                 current_line = current_line[fake_cursor_position + 1 : -1]
@@ -506,7 +506,7 @@ def BlockInput(cfg: dict<any>): void
                 SendCharMsg(cfg, current_line)
                 PrintFakePrompt(current_line, fake_cursor_position)
             endif
-            clearmatches()
+            clearmatches(bufwinid(cfg.buf_id))
         elseif input == "\<C-j>" || input == "\<C-n>" || input == "\<ScrollWheelDown>" || input == "\<Down>"
             normal j
             OpenPreviewForCurrentLine(cfg)
