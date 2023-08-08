@@ -32,12 +32,7 @@ def Is_yank_and_select(input: string, cfg: dict<any>): bool
     return false
 enddef
 
-def GetGrepCmdStr(keyword: string, root_dir: string, target_dir: string): dict<any>
-    if exists('g:vim9_fuzzy_grep_func') && g:vim9_fuzzy_grep_func
-        return g:Vim9_fuzzy_grep_func(root_dir, target_dir)
-    endif
-
-    # Default
+def DefaultGetGrepCmdStr(keyword: string, root_dir: string, target_dir: string): dict<any>
     var git_cmd = "git"
     if has("win64") || has("win32") || has("win16")
         git_cmd = git_cmd .. ".exe"
@@ -54,12 +49,9 @@ def GetGrepCmdStr(keyword: string, root_dir: string, target_dir: string): dict<a
     }
 enddef
 
-def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
-    if exists('g:vim9_fuzzy_list_func') && g:vim9_fuzzy_list_func
-        return g:Vim9_fuzzy_list_func(root_dir, target_dir)
-    endif
+var GetGrepCmdStr = get(g:, "Vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
-    # Default
+def DefaultGetListCmdStr(root_dir: string, target_dir: string): dict<any>
     var rg_cmd = "rg"
     if has("win64") || has("win32") || has("win16")
         rg_cmd = rg_cmd .. ".exe"
@@ -75,6 +67,8 @@ def GetListCmdStr(root_dir: string, target_dir: string): dict<any>
         "cmd": rg_cmd .. " --files " .. target_dir,
     }
 enddef
+
+var GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir, target_dir) => DefaultGetListCmdStr(root_dir, target_dir))
 
 def GetRootdir(): string
     var root_dir = ""
