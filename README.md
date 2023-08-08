@@ -82,7 +82,6 @@ endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
 # To set root of search path on every vim9-fuzzy window is opened in case vim current dir changes.
-g:vim9_fuzzy_get_proj_root_func = true
 def g:Vim9_fuzzy_get_proj_root_func(): string
     var root_dir = getcwd()
     var git_root_dir = trim(system(exepath("git") .. " -C " .. root_dir .. " rev-parse --show-toplevel 2>/dev/null"))
@@ -93,7 +92,6 @@ def g:Vim9_fuzzy_get_proj_root_func(): string
 enddef
 
 # Override defaut list cmd (defaults to rg)
-g:vim9_fuzzy_list_func = true
 def g:Vim9_fuzzy_list_func(root_dir: string, target_dir: string): dict<any>
     var git_exe = exepath("git")
     var dir = target_dir

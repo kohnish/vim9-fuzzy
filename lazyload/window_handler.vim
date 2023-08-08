@@ -70,17 +70,17 @@ enddef
 
 var GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir, target_dir) => DefaultGetListCmdStr(root_dir, target_dir))
 
-def GetRootdir(): string
+def DefaultRootdir(): string
     var root_dir = ""
-    if exists('g:vim9_fuzzy_get_proj_root_func') && g:vim9_fuzzy_get_proj_root_func
-        root_dir = g:Vim9_fuzzy_get_proj_root_func()
-    elseif exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
+    if exists('g:vim9_fuzzy_proj_dir') && g:vim9_fuzzy_proj_dir != "/" && getcwd() != "/"
         root_dir = g:vim9_fuzzy_proj_dir
     else
         root_dir = getcwd()
     endif
     return root_dir
 enddef
+
+var GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir())
 
 def GetYankPath(): string
     var persist_path = ""
