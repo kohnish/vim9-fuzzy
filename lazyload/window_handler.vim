@@ -229,9 +229,12 @@ enddef
 
 export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
     var buf_id = cfg.buf_id
+    var win_id = bufwinid(cfg.buf_id)
+    if win_id != -1
+        clearmatches(bufwinid(cfg.buf_id))
+    endif
     deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
-        clearmatches(bufwinid(cfg.buf_id))
         highlight matched_str_colour guifg=red ctermfg=red term=bold gui=bold
         var line_counter = 1
         var lines = []
@@ -300,6 +303,10 @@ def ConfigureWindow(cfg: dict<any>): void
 enddef
 
 def CloseWindow(cfg: dict<any>): void
+    try
+        clearmatches(cfg.buf_id)
+    catch
+    endtry
     try
         execute "silent bdelete! " .. cfg.buf_id
     catch
@@ -551,6 +558,12 @@ def BlockInput(cfg: dict<any>): void
                     execute 'botright vsp ' .. file_full_path
                 elseif input == g_select_keymap["tabedit"]
                     execute 'tabedit ' .. file_full_path
+                endif
+                if cfg.mode == "grep"
+                    var lines = split(line, ":")
+                    if len(lines) > 1
+                        cursor(str2nr(lines[1]), 0)
+                    endif
                 endif
             else
                 echom "File: " .. file_full_path .. " cannot be accessed"
