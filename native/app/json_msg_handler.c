@@ -1,5 +1,4 @@
 #include "json_msg_handler.h"
-#include "grep.h"
 #include "fuzzy.h"
 #include "mru.h"
 #include "search_helper.h"
@@ -12,6 +11,7 @@
 #include <uv.h>
 #ifndef _WIN32
 #include "yank.h"
+#include "grep.h"
 #endif
 
 #define MAX_JSON_TOKENS 128
@@ -137,8 +137,6 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
         queue_search(loop, cmd, value, list_cmd, seq);
-    } else if (strcmp(cmd, "grep") == 0) {
-        queue_grep(loop, cmd, list_cmd, seq);
     } else if (strcmp(cmd, "init_mru") == 0) {
         queue_mru_search(loop, "", mru_path, seq);
     } else if (strcmp(cmd, "write_mru") == 0) {
@@ -146,6 +144,8 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     } else if (strcmp(cmd, "mru") == 0) {
         queue_mru_search(loop, value, mru_path, seq);
 #ifndef _WIN32
+    } else if (strcmp(cmd, "grep") == 0) {
+        queue_grep(loop, cmd, list_cmd, seq);
     } else if (strcmp(cmd, "init_yank") == 0) {
         queue_yank_search(loop, "", yank_path, seq);
     } else if (strcmp(cmd, "yank") == 0) {
