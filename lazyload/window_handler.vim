@@ -49,8 +49,6 @@ def DefaultGetGrepCmdStr(keyword: string, root_dir: string, target_dir: string):
     }
 enddef
 
-var GetGrepCmdStr = get(g:, "Vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
-
 def DefaultGetListCmdStr(root_dir: string, target_dir: string): dict<any>
     var rg_cmd = "rg"
     if has("win64") || has("win32") || has("win16")
@@ -67,8 +65,6 @@ def DefaultGetListCmdStr(root_dir: string, target_dir: string): dict<any>
         "cmd": rg_cmd .. " --files " .. target_dir,
     }
 enddef
-
-var GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir, target_dir) => DefaultGetListCmdStr(root_dir, target_dir))
 
 def DefaultRootdir(): string
     var root_dir = ""
@@ -100,6 +96,11 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
         mru_path = persist_dir .. "/../mru"
     endif
     var yank_path = GetYankPath()
+
+    var GetListCmdStr = (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg)
+    if exists('g:Vim9_fuzzy_list_func')
+        GetListCmdStr = (root_dir_arg, target_dir_arg) => g:Vim9_fuzzy_list_func(root_dir_arg, target_dir_arg)
+    endif
 
     # All const members
     return {
@@ -318,6 +319,10 @@ def SendCharMsg(cfg: dict<any>, msg: string): void
     cfg.current_line = msg
     var cmd = cfg.mode
     if cmd == "grep"
+        var GetGrepCmdStr = (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir)
+        if exists('g:Vim9_fuzzy_grep_func')
+            GetGrepCmdStr = (keyword, root_dir, target_dir) => g:Vim9_fuzzy_grep_func(keyword, root_dir, target_dir)
+        endif
         cfg.list_cmd = GetGrepCmdStr(msg, cfg.root_dir, cfg.target_dir)
         var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
         job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
