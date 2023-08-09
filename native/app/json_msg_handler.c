@@ -101,10 +101,18 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         return;
     }
 
+
+// ToDo: Add grep support to windows 
+#ifndef _WIN32
     if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
         toggle_cancel(1);
         toggle_grep_cancel(1);
         while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
+#else
+    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+        toggle_cancel(1);
+        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+#endif
             usleep(1000);
         }
     }
