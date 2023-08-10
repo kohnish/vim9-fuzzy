@@ -62,6 +62,9 @@ g:vim9_fuzzy_yank_only_key = "\<C-t>"
 
 # Enable preview window
 g:vim9_fuzzy_enable_preview = true
+# Modify preview window height
+g:vim9_file_preview_height = 25
+g:vim9_yank_preview_height = 10
 
 # Path for keeping most recently used files (Default here)
 g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
