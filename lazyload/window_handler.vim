@@ -187,9 +187,9 @@ def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
     endif
     var orig_bufs = tabpagebuflist(tabpagenr())
     if filereadable(line)
-        execute "silent topleft noswapfile keepalt keepjumps pedit " .. fnameescape(line)
+        execute "silent topleft pedit " .. fnameescape(line)
     else
-        execute "silent topleft noswapfile keepalt keepjumps pedit " .. "VIM9_FUZZY_NULL"
+        execute "silent topleft pedit " .. "VIM9_FUZZY_NULL"
     endif
     if cfg.mode == "grep"
         var new_bufs = tabpagebuflist(tabpagenr())
