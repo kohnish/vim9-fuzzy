@@ -90,7 +90,7 @@ def GetYankPath(): string
     return persist_path
 enddef
 
-def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number): dict<any>
+def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number, orig_win_id: number): dict<any>
     var mru_path = ""
     if exists('g:vim9_fuzzy_mru_path')
         mru_path = g:vim9_fuzzy_mru_path
@@ -108,6 +108,7 @@ def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: s
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
         "orig_buf_id": orig_buf_id,
+        "orig_win_id": orig_win_id,
         "buf_id": buf_nr,
         "root_dir": root_dir,
         "target_dir": target_dir,
@@ -315,6 +316,7 @@ def CloseWindow(cfg: dict<any>): void
     pclose
     echohl Normal | echon '' | echohl NONE
     redraw
+    win_gotoid(cfg.orig_win_id)
 enddef
 
 def SendCharMsg(cfg: dict<any>, msg: string): void
@@ -592,7 +594,7 @@ export def StartWindow(...args: list<string>): void
     var channel = InitProcess()
     var orig_buf_id = bufnr()
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id)
+    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id, bufwinid(orig_buf_id))
     ConfigureWindow(cfg)
     try
         BlockInput(cfg)
