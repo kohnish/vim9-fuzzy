@@ -8,9 +8,13 @@ var g_channel = {"channel": CHANNEL_NULL, "job": JOB_NULL}
 const g_script_dir = expand('<script>:p:h')
 const g_preview_enabled = get(g:, 'vim9_fuzzy_enable_preview', false)
 const g_original_preview_height = &previewheight
-const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', 20)
 const g_file_preview_height = get(g:, 'vim9_file_preview_height', 49)
 const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', 10)
+const g_max_rows = &lines
+const g_one_third_row = float2nr(g_max_rows * 0.3)
+const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', g_one_third_row)
+const g_file_preview_height = get(g:, 'vim9_file_preview_height', g_one_third_row * 2)
+const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', g_one_third_row)
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
