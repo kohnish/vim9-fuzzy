@@ -26,8 +26,8 @@ const g_yank_keymap = {
     "copy": get(g:, 'vim9_fuzzy_yank_only_key', "\<C-t>"),
 }
 
-def Is_yank_and_select(input: string, cfg: dict<any>): bool
-    if cfg.mode == "yank"
+def Is_yank_and_select(input: string, ctx: dict<any>): bool
+    if ctx.mode == "yank"
         if input == g_yank_keymap["paste"] || input == g_yank_keymap["copy"]
             return true
         endif
@@ -91,7 +91,7 @@ def GetYankPath(): string
     return persist_path
 enddef
 
-def CreateCfg(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number, orig_win_id: number): dict<any>
+def CreateCtx(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number, orig_win_id: number): dict<any>
     var mru_path = ""
     if exists('g:vim9_fuzzy_mru_path')
         mru_path = g:vim9_fuzzy_mru_path
@@ -150,7 +150,7 @@ def IntToBin(n: number, fill_len: number): list<any>
 enddef
 
 var g_preview_timers = {}
-def OpenPreviewForCurrentLine(cfg: dict<any>): void
+def OpenPreviewForCurrentLine(ctx: dict<any>): void
     if !g_preview_enabled
         return
     endif
@@ -158,36 +158,36 @@ def OpenPreviewForCurrentLine(cfg: dict<any>): void
     # if !empty(timer_info(timer))
     #     timer_stop(timer)
     # endif
-    # g_preview_timers["preview"] = timer_start(30, (_) => OpenPreviewForCurrentLineTask(cfg))
-    OpenPreviewForCurrentLineTask(cfg)
+    # g_preview_timers["preview"] = timer_start(30, (_) => OpenPreviewForCurrentLineTask(ctx))
+    OpenPreviewForCurrentLineTask(ctx)
 enddef
 
 # ToDo: Complete mess, clean up later.
-def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
+def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
     var line = getline(".")
-    if cfg.mode == "yank"
+    if ctx.mode == "yank"
         execute "setlocal previewheight=" .. g_yank_preview_height
         if !empty(line)
             var result_lines = split(line, "|")
-            line = cfg.yank_path .. "/" .. result_lines[0]
+            line = ctx.yank_path .. "/" .. result_lines[0]
         endif
     else
         execute "setlocal previewheight=" .. g_file_preview_height
     endif
     var grep_line_num = 0
-    if cfg.mode == "grep"
+    if ctx.mode == "grep"
         if !empty(line)
             var lines = split(line, ":")
             if len(lines) > 1
-                if cfg.list_cmd["trim_target_dir"]
-                    line = cfg.root_dir .. "/" .. lines[0]
+                if ctx.list_cmd["trim_target_dir"]
+                    line = ctx.root_dir .. "/" .. lines[0]
                 endif
                 grep_line_num = str2nr(lines[1])
             endif
         endif
-    elseif cfg.mode != "mru" && cfg.mode != "yank"
-        if cfg.list_cmd["trim_target_dir"]
-            line = cfg.root_dir .. "/" .. line
+    elseif ctx.mode != "mru" && ctx.mode != "yank"
+        if ctx.list_cmd["trim_target_dir"]
+            line = ctx.root_dir .. "/" .. line
         endif
     endif
     var orig_bufs = tabpagebuflist(tabpagenr())
@@ -197,21 +197,21 @@ def OpenPreviewForCurrentLineTask(cfg: dict<any>): void
     else
         execute pedit_exec  .. "VIM9_FUZZY_NULL"
     endif
-    if cfg.mode == "grep"
+    if ctx.mode == "grep"
         var new_bufs = tabpagebuflist(tabpagenr())
         for i in new_bufs
             if index(orig_bufs, i) == -1
-                cfg.pedit_win = bufwinid(i)
+                ctx.pedit_win = bufwinid(i)
                 break
             endif
         endfor
         try
-            clearmatches(cfg.pedit_win)
+            clearmatches(ctx.pedit_win)
         catch
         endtry
-        var pedit_cmd = "call matchadd('Search', '" .. cfg.current_line .. "')"
-        win_execute(cfg.pedit_win, pedit_cmd)
-        win_execute(cfg.pedit_win, "call cursor(" .. grep_line_num .. ", 0)")
+        var pedit_cmd = "call matchadd('Search', '" .. ctx.current_line .. "')"
+        win_execute(ctx.pedit_win, pedit_cmd)
+        win_execute(ctx.pedit_win, "call cursor(" .. grep_line_num .. ", 0)")
     endif
     execute "setlocal previewheight=" .. g_original_preview_height
 enddef
@@ -228,11 +228,11 @@ def CountCharUntil(line: string, char: string): number
     return counter
 enddef
 
-export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
-    var buf_id = cfg.buf_id
-    var win_id = bufwinid(cfg.buf_id)
+export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
+    var buf_id = ctx.buf_id
+    var win_id = bufwinid(ctx.buf_id)
     if win_id != -1
-        clearmatches(bufwinid(cfg.buf_id))
+        clearmatches(bufwinid(ctx.buf_id))
     endif
     deletebufline(buf_id, 1, "$")
     if len(json_msg["result"]) != 0
@@ -244,7 +244,7 @@ export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
             var bin_list = IntToBin(i["match_pos"], len(i["name"]))
             var col_counter = 0
             for j in bin_list
-                if cfg.mode == "yank" && col_counter < CountCharUntil(i["name"], '|') + 2
+                if ctx.mode == "yank" && col_counter < CountCharUntil(i["name"], '|') + 2
                     col_counter += 1
                     continue
                 endif
@@ -256,13 +256,13 @@ export def PrintResult(cfg: dict<any>, json_msg: dict<any>): void
             line_counter += 1
         endfor
         # ToDo: stop matching with the filename part
-        if cfg.mode == "grep"
-            matchadd("matched_str_colour", cfg.current_line)
+        if ctx.mode == "grep"
+            matchadd("matched_str_colour", ctx.current_line)
         endif
         setbufline(buf_id, 1, lines)
     endif
     redraw
-    OpenPreviewForCurrentLine(cfg)
+    OpenPreviewForCurrentLine(ctx)
     redraw
 enddef
 
@@ -272,7 +272,7 @@ def InitPrompt(): void
     echohl Constant | echon '>> ' | echohl NONE
 enddef
 
-def ConfigureWindow(cfg: dict<any>): void
+def ConfigureWindow(ctx: dict<any>): void
     execute "resize " .. g_search_window_height
 
     setlocal statusline=\ \ Vim9\ Fuzzy
@@ -297,30 +297,30 @@ def ConfigureWindow(cfg: dict<any>): void
     setlocal filetype=
 
     InitPrompt()
-    var cmd = "init_" .. cfg.mode
-    var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
+    var cmd = "init_" .. ctx.mode
+    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+    job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
     redraw
 enddef
 
-def CloseWindow(cfg: dict<any>): void
+def CloseWindow(ctx: dict<any>): void
     try
-        clearmatches(cfg.buf_id)
+        clearmatches(ctx.buf_id)
     catch
     endtry
     try
-        execute "silent bdelete! " .. cfg.buf_id
+        execute "silent bdelete! " .. ctx.buf_id
     catch
     endtry
     try
-        clearmatches(cfg.pedit_win)
+        clearmatches(ctx.pedit_win)
     catch
     endtry
     pclose
     echohl Normal | echon '' | echohl NONE
     redraw
-    if !cfg.no_go_back
-        win_gotoid(cfg.orig_win_id)
+    if !ctx.no_go_back
+        win_gotoid(ctx.orig_win_id)
     endif
     try
         execute "e!"
@@ -331,24 +331,24 @@ def CloseWindow(cfg: dict<any>): void
     endif
 enddef
 
-def SendCharMsg(cfg: dict<any>, msg: string): void
-    cfg.current_line = msg
-    var cmd = cfg.mode
+def SendCharMsg(ctx: dict<any>, msg: string): void
+    ctx.current_line = msg
+    var cmd = ctx.mode
     if cmd == "grep"
         var GetGrepCmdStr = (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir)
         if exists('g:Vim9_fuzzy_grep_func')
             GetGrepCmdStr = (keyword, root_dir, target_dir) => g:Vim9_fuzzy_grep_func(keyword, root_dir, target_dir)
         endif
-        cfg.list_cmd = GetGrepCmdStr(msg, cfg.root_dir, cfg.target_dir)
-        var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-        job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
+        ctx.list_cmd = GetGrepCmdStr(msg, ctx.root_dir, ctx.target_dir)
+        var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+        job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
         return
     endif
     if len(msg) == 0
         cmd = "init_" .. cmd
     endif
-    var msg2send = {"cmd": cmd, "root_dir": cfg.root_dir, "list_cmd": cfg.list_cmd["cmd"], "value": msg, "mru_path": cfg.mru_path, "yank_path": cfg.yank_path}
-    job_handler.WriteToChannel(cfg.channel, msg2send, cfg, PrintResult)
+    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+    job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
 enddef
 
 def PrintFakePrompt(line: string, cursor_pos: number): void
@@ -389,13 +389,13 @@ def FocusIfOpen(filename: string): number
     return f_ret
 enddef
 
-def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): string
+def GetFullPathFromResult(ctx: dict<any>, line: string, current_line: string): string
     var file_full_path = ""
-    var base_dir = cfg.root_dir
-    if !empty(cfg.target_dir)
-        base_dir = cfg.target_dir
+    var base_dir = ctx.root_dir
+    if !empty(ctx.target_dir)
+        base_dir = ctx.target_dir
     endif
-    if cfg.list_cmd["trim_target_dir"]
+    if ctx.list_cmd["trim_target_dir"]
         file_full_path = base_dir .. "/" .. line
     else
         file_full_path = line
@@ -410,15 +410,15 @@ def GetFullPathFromResult(cfg: dict<any>, line: string, current_line: string): s
     endif
 
     # MRU is always stored as absolute path
-    if cfg.mode == "mru"
+    if ctx.mode == "mru"
         file_full_path = line
     endif
 
-    if cfg.mode == "grep"
+    if ctx.mode == "grep"
         var lines = split(line, ":")
         if len(lines) > 0
-            if cfg.list_cmd["trim_target_dir"]
-                file_full_path = cfg.root_dir .. "/" .. lines[0]
+            if ctx.list_cmd["trim_target_dir"]
+                file_full_path = ctx.root_dir .. "/" .. lines[0]
             else
                 file_full_path = lines[0]
             endif
@@ -441,7 +441,7 @@ def FocusOrOpen(filename: string): void
 enddef
 
 var g_pedit_timers = {"line": "", "timer": -1}
-def BlockInput(cfg: dict<any>): void
+def BlockInput(ctx: dict<any>): void
     var current_line = ""
     var fake_cursor_position = 0
     while true
@@ -473,7 +473,7 @@ def BlockInput(cfg: dict<any>): void
                     PrintFakePrompt(current_line, fake_cursor_position)
                 endif
             endif
-            SendCharMsg(cfg, current_line)
+            SendCharMsg(ctx, current_line)
         elseif input == "\<Left>" || input == "\<C-h>"
             if fake_cursor_position > 0
                 fake_cursor_position = fake_cursor_position - 1
@@ -496,47 +496,47 @@ def BlockInput(cfg: dict<any>): void
                 continue
             elseif fake_cursor_position == len(current_line)
                 current_line = current_line[0 : -2]
-                SendCharMsg(cfg, current_line)
+                SendCharMsg(ctx, current_line)
                 fake_cursor_position = fake_cursor_position - 1
                 PrintFakePrompt(current_line, fake_cursor_position)
             elseif fake_cursor_position > 1
                 var current_line_first = current_line[0 : fake_cursor_position - 2]
                 var current_line_last = current_line[fake_cursor_position  : -1]
                 current_line = current_line_first .. current_line_last
-                SendCharMsg(cfg, current_line)
+                SendCharMsg(ctx, current_line)
                 fake_cursor_position = fake_cursor_position - 1
                 PrintFakePrompt(current_line, fake_cursor_position)
             elseif fake_cursor_position == 1
                 current_line = current_line[1  : -1]
-                SendCharMsg(cfg, current_line)
+                SendCharMsg(ctx, current_line)
                 fake_cursor_position = fake_cursor_position - 1
                 PrintFakePrompt(current_line, fake_cursor_position)
             endif
-            clearmatches(bufwinid(cfg.buf_id))
+            clearmatches(bufwinid(ctx.buf_id))
         elseif input == "\<DEL>"
             if fake_cursor_position == 0 
                 current_line = current_line[fake_cursor_position + 1 : -1]
-                SendCharMsg(cfg, current_line)
+                SendCharMsg(ctx, current_line)
                 PrintFakePrompt(current_line, fake_cursor_position)
             elseif fake_cursor_position < len(current_line)
                 var current_line_first = current_line[0 : fake_cursor_position - 1]
                 var current_line_last = current_line[fake_cursor_position + 1 : -1]
                 current_line = current_line_first .. current_line_last
-                SendCharMsg(cfg, current_line)
+                SendCharMsg(ctx, current_line)
                 PrintFakePrompt(current_line, fake_cursor_position)
             endif
-            clearmatches(bufwinid(cfg.buf_id))
+            clearmatches(bufwinid(ctx.buf_id))
         elseif input == "\<C-j>" || input == "\<C-n>" || input == "\<ScrollWheelDown>" || input == "\<Down>"
             normal j
-            OpenPreviewForCurrentLine(cfg)
+            OpenPreviewForCurrentLine(ctx)
             redraw
         elseif input == "\<Up>" || input == "\<ScrollWheelUp>" || input == "\<C-k>" || input == "\<C-p>"
             normal k
-            OpenPreviewForCurrentLine(cfg)
+            OpenPreviewForCurrentLine(ctx)
             redraw
         elseif input == "\<ESC>"
             break
-        elseif index(values(g_select_keymap), input) >= 0 || Is_yank_and_select(input, cfg) == true
+        elseif index(values(g_select_keymap), input) >= 0 || Is_yank_and_select(input, ctx) == true
             if current_line == ":q"
                 break
             endif
@@ -546,13 +546,13 @@ def BlockInput(cfg: dict<any>): void
                 continue
             endif
 
-            if cfg.mode == "yank"
+            if ctx.mode == "yank"
                 var for_paste = getline('.')
                 var result_lines = split(for_paste, "|")
-                var file_name = cfg.yank_path .. "/" .. result_lines[0]
+                var file_name = ctx.yank_path .. "/" .. result_lines[0]
                 var lines_for_paste = readfile(file_name)
                 if input == g_yank_keymap["paste"]
-                    appendbufline(cfg.orig_buf_id, line('.'), lines_for_paste)
+                    appendbufline(ctx.orig_buf_id, line('.'), lines_for_paste)
                 elseif input == g_yank_keymap["copy"]
                     system("printf $'\\e]52;c;%s\\a' \"$(base64 <<(</dev/stdin))\" >> /dev/tty", lines_for_paste)
                 else
@@ -561,24 +561,24 @@ def BlockInput(cfg: dict<any>): void
                 break
             endif
 
-            var file_full_path = fnamemodify(GetFullPathFromResult(cfg, line, current_line), ':p')
+            var file_full_path = fnamemodify(GetFullPathFromResult(ctx, line, current_line), ':p')
 
             if filereadable(file_full_path)
-                var mru_msg = {"cmd": "write_mru", "mru_path": cfg.mru_path, "value": file_full_path }
-                job_handler.WriteToChannel(cfg.channel, mru_msg, cfg, PrintResult)
+                var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
+                job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
                 # Close here, focus goes all wrong.
                 # CloseWindow gets called again, after the loop finishes...
-                CloseWindow(cfg)
+                CloseWindow(ctx)
                 if input == g_select_keymap["edit"]
                     FocusOrOpen(file_full_path)
                 elseif input == g_select_keymap["botright_vsp"]
-                    cfg.no_go_back = true
+                    ctx.no_go_back = true
                     execute 'botright vsp ' .. file_full_path
                 elseif input == g_select_keymap["tabedit"]
-                    cfg.no_go_back = true
+                    ctx.no_go_back = true
                     execute 'tabedit ' .. file_full_path
                 endif
-                if cfg.mode == "grep"
+                if ctx.mode == "grep"
                     var lines = split(line, ":")
                     if len(lines) > 1
                         cursor(str2nr(lines[1]), 0)
@@ -610,13 +610,12 @@ export def StartWindow(...args: list<string>): void
     var channel = InitProcess()
     var orig_buf_id = bufnr()
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    var cfg = CreateCfg(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id, bufwinid(orig_buf_id))
-    ConfigureWindow(cfg)
+    var ctx = CreateCtx(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id, bufwinid(orig_buf_id))
+    ConfigureWindow(ctx)
     try
-        BlockInput(cfg)
+        BlockInput(ctx)
     finally
-        cfg.end = true
-        CloseWindow(cfg)
+        CloseWindow(ctx)
     endtry
 enddef
 
