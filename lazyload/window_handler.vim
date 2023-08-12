@@ -42,12 +42,12 @@ def DefaultGetGrepCmdStr(keyword: string, root_dir: string, target_dir: string):
     if target_dir == ""
         return {
             "trim_target_dir": true,
-            "cmd": "sh -c 'cd " .. root_dir .. " && git grep -n " .. keyword .. "'",
+            "cmd": "cd " .. root_dir .. " && git grep -n '" .. keyword .. "'",
         }
     endif
     return {
         "trim_target_dir": false,
-        "cmd": "git grep -n " .. keyword
+        "cmd": "git grep -n '" .. keyword .. "'"
     }
 enddef
 
