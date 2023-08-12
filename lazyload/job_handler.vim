@@ -33,5 +33,5 @@ export def WriteToChannel(ch: channel, msg: dict<any>, ctx: dict<any>, Cb: func)
     if !empty(timer_info(timer))
         timer_stop(timer)
     endif
-    g_flush_timers[msg_kind] = timer_start(10, (_) => ch_sendexpr(ch, msg, opt))
+    g_flush_timers[msg_kind] = timer_start(100, (_) => ch_sendexpr(ch, msg, opt))
 enddef
