@@ -192,11 +192,15 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
     endif
     var orig_bufs = tabpagebuflist(tabpagenr())
     var pedit_exec = "noswapfile noautocmd silent topleft pedit "
-    if filereadable(line)
-        execute pedit_exec .. fnameescape(line)
-    else
-        execute pedit_exec  .. "VIM9_FUZZY_NULL"
-    endif
+    # pedit goes wrong on modified buffer
+    try
+        if filereadable(line)
+            execute pedit_exec .. fnameescape(line)
+        else
+            execute pedit_exec  .. "VIM9_FUZZY_NULL"
+        endif
+    catch
+    endtry
     if ctx.mode == "grep"
         var new_bufs = tabpagebuflist(tabpagenr())
         for i in new_bufs
@@ -322,12 +326,16 @@ def CloseWindow(ctx: dict<any>): void
     if !ctx.no_go_back
         win_gotoid(ctx.orig_win_id)
     endif
-    try
-        execute "e!"
-    catch
-    endtry
-    if g_was_swap
-        execute "set swapfile"
+    if g_preview_enabled
+        if !getbufvar(ctx.orig_buf_id, "&modified")
+            try
+                execute "e!"
+            catch
+            endtry
+        endif
+        if g_was_swap
+            execute "set swapfile"
+        endif
     endif
 enddef
 
