@@ -614,10 +614,13 @@ def InitProcess(): dict<any>
 enddef
 
 export def Global_mru_write(): void
-    var channel = InitProcess()
-    var ctx = CreateCtx(g_script_dir, "", "", "", channel, -1, -1, -1)
-    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": expand('%:p') }
-    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+    var file_path = expand('%:p')
+    if filereadable(file_path)
+        var channel = InitProcess()
+        var ctx = CreateCtx(g_script_dir, "", "", "", channel, -1, -1, -1)
+        var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_path }
+        job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+    endif
 enddef
 
 export def StartWindow(...args: list<string>): void
