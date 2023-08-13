@@ -85,19 +85,18 @@ const GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir
 const GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg))
 const GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
-def CreateCtx(root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number): dict<any>
+def CreateCtx(root_dir: string, target_dir: string, mode: string, channel: dict<any>, orig_buf_id: number): dict<any>
     # All const members
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
         "no_go_back": false,
         "orig_buf_id": orig_buf_id,
         "orig_win_id": bufwinid(orig_buf_id),
-        "buf_id": buf_nr,
+        "buf_id": bufnr(),
         "root_dir": root_dir,
         "target_dir": target_dir,
         "mode": mode,
         "channel": channel.channel,
-        "job": channel.job,
         "pedit_win": -1,
         "current_line": "",
     }
@@ -606,7 +605,7 @@ export def StartWindow(...args: list<string>): void
     var channel = InitProcess()
     var orig_buf_id = bufnr()
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    var ctx = CreateCtx(GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id)
+    var ctx = CreateCtx(GetRootdir(), target_dir, mode, channel, orig_buf_id)
     ConfigureWindow(ctx)
     try
         BlockInput(ctx)
