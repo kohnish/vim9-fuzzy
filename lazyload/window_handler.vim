@@ -86,19 +86,18 @@ const GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_
 const GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
 def CreateCtx(root_dir: string, target_dir: string, mode: string, channel: dict<any>, orig_buf_id: number): dict<any>
-    # All const members
     return {
-        "list_cmd": GetListCmdStr(root_dir, target_dir),
-        "no_go_back": false,
+        "list_cmd": GetListCmdStr(root_dir, target_dir), # list command for file, path
+        "no_go_back": false, # after closing vim9-fuzzy, skip going back to original buffer for tab open and etc
         "orig_buf_id": orig_buf_id,
         "orig_win_id": bufwinid(orig_buf_id),
-        "buf_id": bufnr(),
+        "buf_id": bufnr(), # vim9-fuzzy buffer
         "root_dir": root_dir,
         "target_dir": target_dir,
-        "mode": mode,
-        "channel": channel.channel,
-        "pedit_win": -1,
-        "current_line": "",
+        "mode": mode, # command mode like yank, mru and etc
+        "channel": channel.channel, 
+        "pedit_win": -1, # preview window id
+        "current_line": "", # user input in vim9-fuzzy prompt
     }
 enddef
 
