@@ -79,9 +79,9 @@ def DefaultRootdir(): string
     return root_dir
 enddef
 
-var GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir())
-var GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg))
-var GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
+const GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir())
+const GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg))
+const GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
 def GetYankPath(): string
     var persist_path = ""
