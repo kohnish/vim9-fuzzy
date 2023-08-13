@@ -14,6 +14,8 @@ const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', g_one_third_row)
 const g_file_preview_height = get(g:, 'vim9_fuzzy_file_preview_height', g_one_third_row * 2)
 const g_yank_preview_height = get(g:, 'vim9_fuzzy_yank_preview_height', g_one_third_row)
 const g_global_mru_enabled = get(g:, 'vim9_fuzzy_enable_global_mru', false)
+const g_yank_path = get(g:, "vim9_fuzzy_yank_path", g_script_dir .. "/../yank")
+const g_mru_path = get(g:, "vim9_fuzzy_mru_path", g_script_dir .. "/../mru")
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -83,36 +85,16 @@ const GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir
 const GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg))
 const GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
-def GetYankPath(): string
-    var persist_path = ""
-    if exists('g:vim9_fuzzy_yank_path')
-        persist_path = g:vim9_fuzzy_yank_path
-    else
-        persist_path = g_script_dir .. "/../yank"
-    endif
-    return persist_path
-enddef
-
-def CreateCtx(persist_dir: string, root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number, orig_win_id: number): dict<any>
-    var mru_path = ""
-    if exists('g:vim9_fuzzy_mru_path')
-        mru_path = g:vim9_fuzzy_mru_path
-    else
-        mru_path = persist_dir .. "/../mru"
-    endif
-    var yank_path = GetYankPath()
-
+def CreateCtx(root_dir: string, target_dir: string, mode: string, channel: dict<any>, buf_nr: number, orig_buf_id: number): dict<any>
     # All const members
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir),
         "no_go_back": false,
         "orig_buf_id": orig_buf_id,
-        "orig_win_id": orig_win_id,
+        "orig_win_id": bufwinid(orig_buf_id),
         "buf_id": buf_nr,
         "root_dir": root_dir,
         "target_dir": target_dir,
-        "mru_path": mru_path,
-        "yank_path": yank_path,
         "mode": mode,
         "channel": channel.channel,
         "job": channel.job,
@@ -166,7 +148,7 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
         execute "setlocal previewheight=" .. g_yank_preview_height
         if !empty(line)
             var result_lines = split(line, "|")
-            line = ctx.yank_path .. "/" .. result_lines[0]
+            line = g_yank_path .. "/" .. result_lines[0]
         endif
     else
         execute "setlocal previewheight=" .. g_file_preview_height
@@ -268,7 +250,7 @@ def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
 enddef
 
 export def Write_mru(ctx: dict<any>, file_full_path: string): void
-    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
+    var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
     job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
 enddef
 
@@ -304,7 +286,7 @@ def ConfigureWindow(ctx: dict<any>): void
 
     InitPrompt()
     var cmd = "init_" .. ctx.mode
-    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "mru_path": g_mru_path, "yank_path": g_yank_path}
     job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
     redraw
 enddef
@@ -343,14 +325,14 @@ def SendCharMsg(ctx: dict<any>, msg: string): void
     var cmd = ctx.mode
     if cmd == "grep"
         ctx.list_cmd = GetGrepCmdStr(msg, ctx.root_dir, ctx.target_dir)
-        var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+        var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": g_mru_path, "yank_path": g_yank_path}
         job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
         return
     endif
     if len(msg) == 0
         cmd = "init_" .. cmd
     endif
-    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
+    var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": g_mru_path, "yank_path": g_yank_path}
     job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
 enddef
 
@@ -552,7 +534,7 @@ def BlockInput(ctx: dict<any>): void
             if ctx.mode == "yank"
                 var for_paste = getline('.')
                 var result_lines = split(for_paste, "|")
-                var file_name = ctx.yank_path .. "/" .. result_lines[0]
+                var file_name = g_yank_path .. "/" .. result_lines[0]
                 var lines_for_paste = readfile(file_name)
                 if input == g_yank_keymap["paste"]
                     appendbufline(ctx.orig_buf_id, line('.'), lines_for_paste)
@@ -568,7 +550,7 @@ def BlockInput(ctx: dict<any>): void
 
             if filereadable(file_full_path)
                 if !g_global_mru_enabled
-                    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
+                    var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
                     job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
                 endif
                 # Close here, focus goes all wrong.
@@ -610,8 +592,8 @@ export def Global_mru_write(): void
     var file_path = expand('%:p')
     if filereadable(file_path)
         var channel = InitProcess()
-        var ctx = CreateCtx(g_script_dir, "", "", "", channel, -1, -1, -1)
-        var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_path }
+        var ctx = CreateCtx("", "", "", channel, -1, -1)
+        var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_path }
         job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
     endif
 enddef
@@ -625,7 +607,7 @@ export def StartWindow(...args: list<string>): void
     var channel = InitProcess()
     var orig_buf_id = bufnr()
     noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
-    var ctx = CreateCtx(g_script_dir, GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id, bufwinid(orig_buf_id))
+    var ctx = CreateCtx(GetRootdir(), target_dir, mode, channel, bufnr(), orig_buf_id)
     ConfigureWindow(ctx)
     try
         BlockInput(ctx)
@@ -635,17 +617,16 @@ export def StartWindow(...args: list<string>): void
 enddef
 
 export def Osc52YankHist(contents: list<any>): void
-    var yank_path = GetYankPath()
-    mkdir(yank_path, "p")
+    mkdir(g_yank_path, "p")
 
     if len(contents[0]) > 1 || len(contents) > 1
-        var yank_file =  yank_path .. "/" .. strftime("%d-%b-%Y %T ")
+        var yank_file =  g_yank_path .. "/" .. strftime("%d-%b-%Y %T ")
         writefile(contents, yank_file, 'b')
     endif
-    var files = split(globpath(yank_path, '*'), '\n')
+    var files = split(globpath(g_yank_path, '*'), '\n')
     # ToDo: make the max num configurable and stop using unix commands.
     if len(files) > 50
-        system("rm -f \"`ls -1tr " .. yank_path .. "/* |head -n1`\"")
+        system("rm -f \"`ls -1tr " .. g_yank_path .. "/* |head -n1`\"")
     endif
 enddef
 
