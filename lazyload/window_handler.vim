@@ -80,6 +80,8 @@ def DefaultRootdir(): string
 enddef
 
 var GetRootdir = get(g:, "Vim9_fuzzy_get_proj_root_func", () => DefaultRootdir())
+var GetListCmdStr = get(g:, "Vim9_fuzzy_list_func", (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg))
+var GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir))
 
 def GetYankPath(): string
     var persist_path = ""
@@ -99,11 +101,6 @@ def CreateCtx(persist_dir: string, root_dir: string, target_dir: string, mode: s
         mru_path = persist_dir .. "/../mru"
     endif
     var yank_path = GetYankPath()
-
-    var GetListCmdStr = (root_dir_arg, target_dir_arg) => DefaultGetListCmdStr(root_dir_arg, target_dir_arg)
-    if exists('g:Vim9_fuzzy_list_func')
-        GetListCmdStr = (root_dir_arg, target_dir_arg) => g:Vim9_fuzzy_list_func(root_dir_arg, target_dir_arg)
-    endif
 
     # All const members
     return {
@@ -345,10 +342,6 @@ def SendCharMsg(ctx: dict<any>, msg: string): void
     ctx.current_line = msg
     var cmd = ctx.mode
     if cmd == "grep"
-        var GetGrepCmdStr = (keyword, root_dir, target_dir) => DefaultGetGrepCmdStr(keyword, root_dir, target_dir)
-        if exists('g:Vim9_fuzzy_grep_func')
-            GetGrepCmdStr = (keyword, root_dir, target_dir) => g:Vim9_fuzzy_grep_func(keyword, root_dir, target_dir)
-        endif
         ctx.list_cmd = GetGrepCmdStr(msg, ctx.root_dir, ctx.target_dir)
         var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": ctx.mru_path, "yank_path": ctx.yank_path}
         job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)
