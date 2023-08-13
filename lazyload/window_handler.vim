@@ -592,9 +592,8 @@ export def Global_mru_write(): void
     var file_path = expand('%:p')
     if filereadable(file_path)
         var channel = InitProcess()
-        var ctx = CreateCtx("", "", "", channel, -1, -1)
         var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_path }
-        job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+        job_handler.WriteToChannel(channel.channel, mru_msg, {}, PrintResult)
     endif
 enddef
 
