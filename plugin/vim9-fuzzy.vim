@@ -16,6 +16,13 @@ if exists('g:vim9_fuzzy_yank_enabled') && g:vim9_fuzzy_yank_enabled
     augroup END
 endif
 
+if exists('g:vim9_fuzzy_global_mru_enabled') && g:vim9_fuzzy_global_mru_enabled
+    augroup Vim9FuzzyMru
+        autocmd!
+        autocmd BufReadPost * window_handler.Global_mru_write()
+    augroup END
+endif
+
 def Make(...args: list<any>): void
     execute "!" .. "sh -c 'cd " ..  expand('<script>:p:h') .. "/../" .. " && make -j4 " .. join(args) .. "'"
 enddef

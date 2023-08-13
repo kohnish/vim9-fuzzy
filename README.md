@@ -76,6 +76,9 @@ noremap <C-y> :Vim9FuzzyYank<CR>
 # The path for keeping yank histories (Defaulting here)
 g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
 
+# Enable MRU for all opened files
+g:vim9_fuzzy_enable_global_mru = true
+
 # Root path to search from (Default to the current dir)
 var proj_dir = getcwd()
 var git_root = system("git rev-parse --show-toplevel | tr -d '\n'")

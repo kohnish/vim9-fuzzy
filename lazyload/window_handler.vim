@@ -232,7 +232,7 @@ def CountCharUntil(line: string, char: string): number
     return counter
 enddef
 
-export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
+def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
     var buf_id = ctx.buf_id
     var win_id = bufwinid(ctx.buf_id)
     if win_id != -1
@@ -268,6 +268,11 @@ export def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
     redraw
     OpenPreviewForCurrentLine(ctx)
     redraw
+enddef
+
+export def Write_mru(ctx: dict<any>, file_full_path: string): void
+    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
+    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
 enddef
 
 def InitPrompt(): void
@@ -569,8 +574,10 @@ def BlockInput(ctx: dict<any>): void
             var file_full_path = fnamemodify(GetFullPathFromResult(ctx, line, current_line), ':p')
 
             if filereadable(file_full_path)
-                var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
-                job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+                if !g_global_mru_enabled
+                    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": file_full_path }
+                    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+                endif
                 # Close here, focus goes all wrong.
                 # CloseWindow gets called again, after the loop finishes...
                 CloseWindow(ctx)
@@ -604,6 +611,13 @@ def InitProcess(): dict<any>
         g_channel = job_handler.StartFinderProcess()
     endif
     return g_channel
+enddef
+
+export def Global_mru_write(): void
+    var channel = InitProcess()
+    var ctx = CreateCtx(g_script_dir, "", "", "", channel, -1, -1, -1)
+    var mru_msg = {"cmd": "write_mru", "mru_path": ctx.mru_path, "value": expand('%:p') }
+    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
 enddef
 
 export def StartWindow(...args: list<string>): void
