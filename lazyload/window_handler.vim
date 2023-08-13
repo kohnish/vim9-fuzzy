@@ -247,11 +247,6 @@ def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
     redraw
 enddef
 
-export def Write_mru(ctx: dict<any>, file_full_path: string): void
-    var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
-    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
-enddef
-
 def InitPrompt(): void
     echon "\r\r"
     echon ''
@@ -423,6 +418,14 @@ def FocusOrOpen(filename: string): void
     endif
 enddef
 
+def MruCb(ctx: dict<any>, msg: dict<any>): void
+enddef
+
+def Write_mru(channel: channel, file_path: string): void
+    var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_path }
+    job_handler.WriteToChannel(channel, mru_msg, {}, MruCb)
+enddef
+
 var g_pedit_timers = {"line": "", "timer": -1}
 def BlockInput(ctx: dict<any>): void
     var current_line = ""
@@ -548,8 +551,7 @@ def BlockInput(ctx: dict<any>): void
 
             if filereadable(file_full_path)
                 if !g_global_mru_enabled
-                    var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_full_path }
-                    job_handler.WriteToChannel(ctx.channel, mru_msg, ctx, PrintResult)
+                    Write_mru(ctx.channel, file_full_path)
                 endif
                 # Close here, focus goes all wrong.
                 # CloseWindow gets called again, after the loop finishes...
@@ -590,8 +592,7 @@ export def Global_mru_write(): void
     var file_path = expand('%:p')
     if filereadable(file_path)
         var channel = InitProcess()
-        var mru_msg = {"cmd": "write_mru", "mru_path": g_mru_path, "value": file_path }
-        job_handler.WriteToChannel(channel.channel, mru_msg, {}, PrintResult)
+        Write_mru(channel.channel, file_path)
     endif
 enddef
 
