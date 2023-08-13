@@ -88,7 +88,6 @@ const GetGrepCmdStr = get(g:, "vim9_fuzzy_grep_func", (keyword, root_dir, target
 def CreateCtx(root_dir: string, target_dir: string, mode: string, channel: dict<any>, orig_buf_id: number): dict<any>
     return {
         "list_cmd": GetListCmdStr(root_dir, target_dir), # list command for file, path
-        "no_go_back": false, # after closing vim9-fuzzy, skip going back to original buffer for tab open and etc
         "orig_buf_id": orig_buf_id,
         "orig_win_id": bufwinid(orig_buf_id),
         "buf_id": bufnr(), # vim9-fuzzy buffer
@@ -300,9 +299,6 @@ def CloseWindow(ctx: dict<any>): void
     pclose
     echohl Normal | echon '' | echohl NONE
     redraw
-    if !ctx.no_go_back
-        win_gotoid(ctx.orig_win_id)
-    endif
     if g_preview_enabled
         if !getbufvar(ctx.orig_buf_id, "&modified")
             try
@@ -406,7 +402,7 @@ def GetFullPathFromResult(ctx: dict<any>, line: string, current_line: string): s
     return file_full_path
 enddef
 
-def FocusOrOpen(filename: string): void
+def FocusOrOpen(ctx: dict<any>, filename: string): void
     var f_ret = FocusIfOpen(filename)
     if f_ret == WIN_ALREADY_FOCUSED
         return
@@ -557,12 +553,10 @@ def BlockInput(ctx: dict<any>): void
                 # CloseWindow gets called again, after the loop finishes...
                 CloseWindow(ctx)
                 if input == g_select_keymap["edit"]
-                    FocusOrOpen(file_full_path)
+                    FocusOrOpen(ctx, file_full_path)
                 elseif input == g_select_keymap["botright_vsp"]
-                    ctx.no_go_back = true
                     execute 'botright vsp ' .. file_full_path
                 elseif input == g_select_keymap["tabedit"]
-                    ctx.no_go_back = true
                     execute 'tabedit ' .. file_full_path
                 endif
                 if ctx.mode == "grep"
