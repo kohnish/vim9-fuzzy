@@ -57,7 +57,6 @@ typedef struct search_result_t {
 
 
 static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
-    fflush(NULL);
     FILE *fp = popen(list_cmd, "r");
     if (fp == NULL) {
         return 0;
