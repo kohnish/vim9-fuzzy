@@ -11,8 +11,9 @@ const g_original_preview_height = &previewheight
 const g_max_rows = &lines
 const g_one_third_row = float2nr(g_max_rows * 0.3)
 const g_search_window_height = get(g:, 'vim9_fuzzy_win_height', g_one_third_row)
-const g_file_preview_height = get(g:, 'vim9_file_preview_height', g_one_third_row * 2)
-const g_yank_preview_height = get(g:, 'vim9_yank_preview_height', g_one_third_row)
+const g_file_preview_height = get(g:, 'vim9_fuzzy_file_preview_height', g_one_third_row * 2)
+const g_yank_preview_height = get(g:, 'vim9_fuzzy_yank_preview_height', g_one_third_row)
+const g_global_mru_enabled = get(g:, 'vim9_fuzzy_enable_global_mru', false)
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
