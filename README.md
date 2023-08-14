@@ -79,7 +79,7 @@ g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
 # Enable MRU for all opened files
 g:vim9_fuzzy_enable_global_mru = true
 
-# Root path to search from (Default to the current dir)
+# Root path to search from statically (Default to the current dir)
 var proj_dir = getcwd()
 var git_root = system("git rev-parse --show-toplevel | tr -d '\n'")
 if len(git_root) > 0
@@ -88,25 +88,25 @@ endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
 # To set root of search path on every vim9-fuzzy window is opened in case vim current dir changes.
-def g:Vim9_fuzzy_get_proj_root_func(): string
-    var root_dir = getcwd()
-    var git_root_dir = trim(system(exepath("git") .. " -C " .. root_dir .. " rev-parse --show-toplevel 2>/dev/null"))
-    if !empty(git_root_dir)
-        root_dir = git_root_dir
+def GetProjRoot(base_dir: string): string
+    var root_dir = trim(system(exepath("git") .. " -C " .. base_dir .. " rev-parse --show-toplevel 2>/dev/null"))
+    if empty(root_dir)
+        root_dir = getcwd()
     endif
     return root_dir
 enddef
+g:Vim9_fuzzy_get_proj_root_func = () => GetProjRoot(getcwd())
 
-# Override defaut list cmd (defaults to rg)
-def g:Vim9_fuzzy_list_func(root_dir: string, target_dir: string): dict<any>
+# Override list command string
+def ListFiles(root_dir: string, target_dir: string): dict<any>
     var git_exe = exepath("git")
     var dir = target_dir
     if dir == ""
         dir = root_dir
     endif
-    var is_in_git_dir = system(git_exe .. " -C " .. dir .. " rev-parse --is-inside-work-tree")
+    var is_in_git_dir = trim(system(git_exe .. " -C " .. dir .. " rev-parse --is-inside-work-tree 2>/dev/null"))
     var in_git_dir = v:shell_error == 0
-    var is_in_ignore_dir = system("git check-ignore " .. dir)
+    var is_in_ignore_dir = trim(system("git check-ignore " .. dir .. " 2>/dev/null"))
     var in_ignore_dir = v:shell_error == 0
     if in_git_dir && !in_ignore_dir
         return {
@@ -119,6 +119,8 @@ def g:Vim9_fuzzy_list_func(root_dir: string, target_dir: string): dict<any>
         "cmd": "find " .. dir .. " -type f -maxdepth 3"
     }
 enddef
+
+g:Vim9_fuzzy_list_func = (root_dir, target_dir) => ListFiles(root_dir, target_dir)
 ```
 
 Build requirements
