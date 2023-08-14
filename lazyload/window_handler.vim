@@ -38,19 +38,19 @@ def Is_yank_and_select(input: string, ctx: dict<any>): bool
 enddef
 
 def DefaultGetGrepCmdStr(keyword: string, root_dir: string, target_dir: string): dict<any>
-    var git_cmd = "git"
+    var rg_cmd = "rg"
     if has("win64") || has("win32") || has("win16")
-        git_cmd = git_cmd .. ".exe"
+        rg_cmd = rg_cmd .. ".exe"
     endif
     if target_dir == ""
         return {
             "trim_target_dir": true,
-            "cmd": "cd " .. root_dir .. " && git grep -n '" .. keyword .. "'",
+            "cmd": "cd " .. root_dir .. " && " .. rg_cmd .. " --color=never -Hn --no-heading '" .. keyword .. "' ."
         }
     endif
     return {
         "trim_target_dir": false,
-        "cmd": "git grep -n '" .. keyword .. "'"
+        "cmd":  rg_cmd .. " --color=never -Hn --no-heading '" .. keyword .. "' " .. target_dir
     }
 enddef
 
