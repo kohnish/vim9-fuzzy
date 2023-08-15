@@ -104,7 +104,6 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
 static void grep_task(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     start_grep(search_data->list_cmd, "grep", search_data->seq_);
-    toggle_grep_init(0);
 }
 
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
