@@ -34,6 +34,12 @@ add `packadd! vim9-fuzzy` in your vimrc
 # For Linux, there is prebuilt binary
 :Vim9fuzzyMake linux-download
 
+# For MacOS x86, there is prebuilt binary
+:Vim9fuzzyMake macos-download
+
+# For Windows, there is prebuilt binary (untested)
+:Vim9fuzzyMake win-download
+
 # Or just compile static binary and install. (Check the build requirement for details)
 :Vim9fuzzyMake online-build
 ```
