@@ -91,3 +91,50 @@ jobs:
         asset_path: build-win/sha256.txt
         asset_name: sha256-win-x86-64.txt
         asset_content_type: application/zip
+
+  macos-build:
+    runs-on: macos-latest
+
+    - uses: actions/checkout@v3
+
+    - name: cmake
+      run: mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_FULL=ON ..
+
+    - name: build
+      run: cd build && make -j
+      
+    - name: install
+      run: cd build && make install/strip && mv ../bin/vim9-fuzzy ../bin/vim9-fuzzy-osx && sha256sum ../bin/vim9-fuzzy-osx | awk '{print $1}' > sha256.txt
+
+    - name: release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: upload
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: bin/vim9-fuzzy-osx
+        asset_name: vim9-fuzzy-osx-x86-64
+        asset_content_type: application/zip
+
+    - name: sha256-upload
+      id: upload-sha256-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/sha256.txt
+        asset_name: sha256-osx-x86-64.txt
+        asset_content_type: application/zip
