@@ -11,17 +11,17 @@ online-build:
 
 linux-download:
 	mkdir -p bin
-	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.3/vim9-fuzzy-linux-x86-64 -o bin/vim9-fuzzy
+	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.4/vim9-fuzzy-linux-x86-64 -o bin/vim9-fuzzy
 	chmod +x bin/vim9-fuzzy
 
 win-download:
 	mkdir -p bin
-	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.3/vim9-fuzzy-win-x86-64 -o bin/vim9-fuzzy.exe
+	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.4/vim9-fuzzy-win-x86-64 -o bin/vim9-fuzzy.exe
 	chmod +x bin/vim9-fuzzy.exe
 
 macos-download:
 	mkdir -p bin
-	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.3/vim9-fuzzy-osx-x86-64 -o bin/vim9-fuzzy
+	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.4/vim9-fuzzy-osx-x86-64 -o bin/vim9-fuzzy
 	chmod +x bin/vim9-fuzzy
 
 clean:
