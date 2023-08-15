@@ -64,8 +64,8 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
     size_t current_sz = 500;
     file_info_t *file_res AUTO_FREE_FILE_INFO = malloc(sizeof(file_info_t) * 500);
     char *line = NULL;
-    size_t len = 0;
     size_t matched_len = 0;
+    size_t len;
     ssize_t read;
     int broken = 0;
     str_pool_t **str_pool = init_str_pool(1024);
@@ -75,21 +75,18 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
             broken = 1;
             break;
         }
-        size_t file_len = len;
-        char *match_pos_str AUTO_FREE_STR = malloc(file_len + 1);
-        memset(match_pos_str, '0', file_len);
-        match_pos_str[file_len] = '\0';
+        if (len > 512) {
+            continue;
+        }
 
         if (matched_len >= current_sz) {
             current_sz = current_sz * 2;
             file_res = realloc(file_res, sizeof(file_info_t) * current_sz);
         }
-        size_t escaped_len = 0;
+        size_t escaped_len;
         char *escaped_line = json_escape(line, strlen(line) - 1, &escaped_len);
         file_res[matched_len].file_path = pool_str(&str_pool, escaped_line);
         free(escaped_line);
-        file_res[matched_len].fuzzy_score = 0;
-        file_res[matched_len].f_len = escaped_len;
         file_res[matched_len].match_pos_flag = 0;
         ++matched_len;
     }
