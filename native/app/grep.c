@@ -104,15 +104,16 @@ static void grep_task(uv_work_t *req) {
 }
 
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
-    toggle_grep_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
     search_data->seq_ = seq;
     strcpy(search_data->cmd, cmd);
     strcpy(search_data->list_cmd, list_cmd);
     req->data = search_data;
+    toggle_grep_init(1);
     int ret = uv_queue_work(loop, req, grep_task, after_grep_task);
     if (ret != 0) {
+        toggle_grep_init(0);
         free(search_data);
         free(req);
         return -1;
