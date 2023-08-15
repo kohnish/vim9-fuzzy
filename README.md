@@ -49,7 +49,7 @@ noremap <C-p> :Vim9FuzzyPath<CR>
 noremap <C-e> :Vim9FuzzyMru<CR>
 # Search in the directory of the current dir
 noremap <C-k> :Vim9FuzzyPwdFile<CR>
-# Exact match grep (only git grep is supported)
+# Exact match grep (default to rg)
 noremap <C-a> :Vim9FuzzyGrep<CR>
 
 # Search window height
