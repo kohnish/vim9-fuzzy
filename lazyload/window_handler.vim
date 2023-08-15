@@ -283,26 +283,20 @@ def ConfigureWindow(ctx: dict<any>): void
     redraw
 enddef
 
-def Close(): void
-    pclose
-enddef
-
 def CloseWindow(ctx: dict<any>): void
     try
         clearmatches(ctx.buf_id)
     catch
     endtry
-
     try
         execute "silent bdelete! " .. ctx.buf_id
     catch
     endtry
-
     try
         clearmatches(ctx.pedit_win)
     catch
     endtry
-
+    pclose
     echohl Normal | echon '' | echohl NONE
     redraw
     if g_preview_enabled
@@ -313,7 +307,6 @@ def CloseWindow(ctx: dict<any>): void
             endtry
         endif
     endif
-    timer_start(100, (_) => Close())
 enddef
 
 def SendCharMsg(ctx: dict<any>, msg: string): void
