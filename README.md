@@ -123,6 +123,23 @@ def ListFiles(root_dir: string, target_dir: string): dict<any>
 enddef
 
 g:Vim9_fuzzy_list_func = (root_dir, target_dir) => ListFiles(root_dir, target_dir)
+
+# Override grep command
+def GrepCmd(keyword: string, root_dir: string, target_dir: string): dict<any>
+    var dir = TargetDir(root_dir, target_dir)
+    if IsInGitDir(dir)
+        return {
+            "trim_target_dir": true,
+            "cmd": "cd " .. dir .. " && " .. g_git_cmd .. " grep -n " .. keyword
+        }
+    endif
+    return {
+        "trim_target_dir": false,
+        "cmd":  "rg --color=never -Hn --no-heading " .. keyword .. " ."
+    }
+enddef
+
+g:Vim9_fuzzy_grep_func = (keyword, root_dir, target_dir) => GrepCmd(keyword, root_dir, target_dir)
 ```
 
 Build requirements
