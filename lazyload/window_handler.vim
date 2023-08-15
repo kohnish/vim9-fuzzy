@@ -177,14 +177,14 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
         endif
     catch
     endtry
+    var new_bufs = tabpagebuflist(tabpagenr())
+    for i in new_bufs
+        if index(orig_bufs, i) == -1
+            ctx.pedit_win = bufwinid(i)
+            break
+        endif
+    endfor
     if ctx.mode == "grep"
-        var new_bufs = tabpagebuflist(tabpagenr())
-        for i in new_bufs
-            if index(orig_bufs, i) == -1
-                ctx.pedit_win = bufwinid(i)
-                break
-            endif
-        endfor
         try
             clearmatches(ctx.pedit_win)
         catch
@@ -209,6 +209,9 @@ def CountCharUntil(line: string, char: string): number
 enddef
 
 def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
+    if !bufloaded(ctx.buf_id)
+        return
+    endif
     var buf_id = ctx.buf_id
     var win_id = bufwinid(ctx.buf_id)
     if win_id != -1
@@ -283,10 +286,6 @@ def ConfigureWindow(ctx: dict<any>): void
     redraw
 enddef
 
-def Close(): void
-    pclose
-enddef
-
 def CloseWindow(ctx: dict<any>): void
     try
         clearmatches(ctx.buf_id)
@@ -318,9 +317,6 @@ def CloseWindow(ctx: dict<any>): void
             endtry
         endif
     endif
-    # workaround for preview window staying open for unknown reasons.
-    # pclose will be called 4 times on edit...
-    timer_start(100, (_) => Close())
 enddef
 
 def SendCharMsg(ctx: dict<any>, msg: string): void
