@@ -7,12 +7,12 @@ No vim language binding dependencies, use job-start API to avoid blocking vim
 
 ToDo
 ----
- - Reduce hard coding
- - Remove the default rg executables dependency
+ - UTF-8 support
  - Add backtrace
  - Add tests
+ - Reduce hard coding
  - Improve fuzzy algorithm
- - UTF-8 support
+ - Remove the default rg executables dependency
  - Test on Windows
 
 Runtime requirements
