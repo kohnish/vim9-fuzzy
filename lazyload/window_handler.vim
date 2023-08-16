@@ -20,7 +20,7 @@ const g_mru_path = get(g:, "vim9_fuzzy_mru_path", g_script_dir .. "/../mru")
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
     "tabedit": get(g:, 'vim9_fuzzy_tabedit_key', "\<C-t>"),
-    "botright_vsp": get(g:, 'vim9_fuzzy_botright_vsp_key', "\<C-]>"),
+    "vsplit": get(g:, 'vim9_fuzzy_vsplit_key', "\<C-v>"),
 }
 
 const g_yank_keymap = {
@@ -420,7 +420,7 @@ def FocusOrOpen(ctx: dict<any>, filename: string): void
     if f_ret == WIN_FOCUSED_ON_MODIFIABLE
         execute "edit " .. filename
     else
-        execute 'botright vsp ' .. filename
+        execute 'vsplit ' .. filename
     endif
 enddef
 
@@ -564,8 +564,8 @@ def BlockInput(ctx: dict<any>): void
                 CloseWindow(ctx)
                 if input == g_select_keymap["edit"]
                     FocusOrOpen(ctx, file_full_path)
-                elseif input == g_select_keymap["botright_vsp"]
-                    execute 'botright vsp ' .. file_full_path
+                elseif input == g_select_keymap["vsplit"]
+                    execute 'vsplit ' .. file_full_path
                 elseif input == g_select_keymap["tabedit"]
                     execute 'tabedit ' .. file_full_path
                 endif
