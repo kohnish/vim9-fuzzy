@@ -1,7 +1,8 @@
 Vim9-fuzzy
 =========
 
-A vim plugin for finding files with approximate string matching.
+Yet another fuzzy search plugin for vim with vim9script support.
+Fuzzy matching for files, mru, yanked texts are supported.
 No vim language binding dependencies, use job-start API to avoid blocking vim
 
 ToDo
@@ -11,13 +12,12 @@ ToDo
  - Add backtrace
  - Add tests
  - Improve fuzzy algorithm
- - Allow custom keybinding
  - UTF-8 support
  - Test on Windows
 
 Runtime requirements
 --------------------
- - Vim with vim9 script support
+ - Vim with vim9script support
  - Rg (Only for the default list command, can be overridden by Vim9_fuzzy_user_list_func)
 
 Usage
@@ -58,24 +58,28 @@ noremap <C-k> :Vim9FuzzyPwdFile<CR>
 # Exact match grep (default to rg)
 noremap <C-a> :Vim9FuzzyGrep<CR>
 
+# Enable MRU for all opened files (default is only for files opened via vim9fuzzy window)
+g:vim9_fuzzy_enable_global_mru = true
+
+# Path for keeping most recently used files (Default here)
+g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
+
+# Enable preview window
+g:vim9_fuzzy_enable_preview = true
+
+# Modify preview window height
+g:vim9_fuzzy_file_preview_height = 25
+g:vim9_fuzzy_yank_preview_height = 10
+
 # Search window height
 g:vim9_fuzzy_win_height = 15
 
 # Override select keys
 g:vim9_fuzzy_edit_key = "\<CR>"
-g:vim9_fuzzy_botright_vsp_key = "\<C-v>"
+g:vim9_fuzzy_vsplit_key = "\<C-v>"
 g:vim9_fuzzy_tabedit_key = "\<C-t>"
 g:vim9_fuzzy_yank_paste_key = "\<CR>"
 g:vim9_fuzzy_yank_only_key = "\<C-t>"
-
-# Enable preview window
-g:vim9_fuzzy_enable_preview = true
-# Modify preview window height
-g:vim9_fuzzy_file_preview_height = 25
-g:vim9_fuzzy_yank_preview_height = 10
-
-# Path for keeping most recently used files (Default here)
-g:vim9_fuzzy_mru_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/mru"
 
 # For fuzzy yank history search (No windows support)
 # Enable yank hook (Default false)
@@ -83,9 +87,6 @@ g:vim9_fuzzy_yank_enabled = true
 noremap <C-y> :Vim9FuzzyYank<CR>
 # The path for keeping yank histories (Defaulting here)
 g:vim9_fuzzy_yank_path = $HOME .. "/.vim/pack/plugins/opt/vim9-fuzzy/yank"
-
-# Enable MRU for all opened files
-g:vim9_fuzzy_enable_global_mru = true
 
 # Root path to search from statically (Default to the current dir)
 var proj_dir = getcwd()
