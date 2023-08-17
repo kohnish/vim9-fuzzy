@@ -23,7 +23,10 @@ char *json_escape(const char *json, size_t len, size_t *result_len) {
     char *buf = malloc(len * 2);
     size_t counter = 0;
     for (size_t i = 0; i < len; i++) {
-        if (json[i] == '\n') {
+        // only ascii is supported
+        if ((json[i] & 192) >= 192) {
+            continue;
+        } else if (json[i] == '\n') {
             buf[counter] = '\\';
             buf[++counter] = 'n';
         } else if (json[i] == '\r') {
