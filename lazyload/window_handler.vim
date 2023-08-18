@@ -173,7 +173,7 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
         if filereadable(line)
             execute pedit_exec .. fnameescape(line)
         else
-            execute pedit_exec  .. "VIM9_FUZZY_NULL"
+            execute pedit_exec  .. g_script_dir .. "/NULL"
         endif
     catch
     endtry
@@ -244,7 +244,6 @@ def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
         endif
         setbufline(buf_id, 1, lines)
     endif
-    redraw
     OpenPreviewForCurrentLine(ctx)
     redraw
 enddef
@@ -608,7 +607,7 @@ export def StartWindow(...args: list<string>): void
     endif
     var channel = InitProcess()
     var orig_buf_id = bufnr()
-    noswapfile noautocmd keepalt keepjumps botright split Vim9 Fuzzy
+    execute "noswapfile noautocmd keepalt keepjumps botright split " .. g_script_dir .. "/NULL"
     var ctx = CreateCtx(GetRootdir(), target_dir, mode, channel, orig_buf_id)
     ConfigureWindow(ctx)
     try
