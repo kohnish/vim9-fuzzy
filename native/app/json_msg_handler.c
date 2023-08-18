@@ -35,7 +35,7 @@ static void reset_cancel(void) {
 }
 
 void job_started(void) {
-    job = 0;
+    job = 1;
 }
 
 void job_done(void) {
