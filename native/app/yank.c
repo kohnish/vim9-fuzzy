@@ -20,27 +20,6 @@ static file_info_t *g_yank_cache;
 static size_t g_yank_len;
 static str_pool_t **g_str_pool;
 
-static uv_mutex_t yank_init_mutex;
-static int yank_init = 0;
-
-static void toggle_yank_init(int val) {
-    uv_mutex_lock(&yank_init_mutex);
-    yank_init = val;
-    uv_mutex_unlock(&yank_init_mutex);
-}
-
-int is_yank_search_ongoing(void) {
-    return yank_init;
-}
-
-void init_yank_mutex(void) {
-    uv_mutex_init(&yank_init_mutex);
-}
-
-void deinit_yank_mutex(void) {
-    uv_mutex_destroy(&yank_init_mutex);
-}
-
 static int yank_score_cmp(const void *s1, const void *s2) {
     int v1 = ((file_info_t *)s1)->yank_score;
     int v2 = ((file_info_t *)s2)->yank_score;
@@ -141,11 +120,11 @@ static void fuzzy_yank_search(uv_work_t *req) {
     } else {
         start_fuzzy_response(search_data->value, "yank", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
-    toggle_yank_init(0);
+    job_done();
 }
 
 int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path, int seq) {
-    toggle_yank_init(1);
+    job_started();
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
     strcpy(search_data->value, value);
@@ -159,6 +138,7 @@ int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path,
     if (ret != 0) {
         free(search_data);
         free(req);
+        job_done();
         return -1;
     }
     return 0;
