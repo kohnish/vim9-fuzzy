@@ -9,44 +9,11 @@
 #include <unistd.h>
 #include <uv.h>
 
-static uv_mutex_t cancel_mutex;
-static int cancel = 0;
-
-void toggle_grep_cancel(int val) {
-    uv_mutex_lock(&cancel_mutex);
-    cancel = val;
-    uv_mutex_unlock(&cancel_mutex);
-}
-
-static uv_mutex_t file_init_mutex;
-static int file_init = 0;
-
-static void toggle_grep_init(int val) {
-    uv_mutex_lock(&file_init_mutex);
-    file_init = val;
-    uv_mutex_unlock(&file_init_mutex);
-}
-
-int is_grep_search_ongoing(void) {
-    return file_init;
-}
-
-void init_grep_mutex(void) {
-    uv_mutex_init(&file_init_mutex);
-    uv_mutex_init(&cancel_mutex);
-}
-
-void deinit_grep_mutex(void) {
-    uv_mutex_destroy(&file_init_mutex);
-    uv_mutex_destroy(&cancel_mutex);
-}
-
 static void after_grep_task(uv_work_t *req, int status) {
     (void)status;
     search_data_t *search_data = (search_data_t *)req->data;
     free(search_data);
     free(req);
-    toggle_grep_init(0);
 }
 
 typedef struct search_result_t {
@@ -57,6 +24,7 @@ typedef struct search_result_t {
 
 
 static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
+    // use fork and kill it on cancel
     FILE *fp = popen(list_cmd, "r");
     if (fp == NULL) {
         return 0;
@@ -70,8 +38,7 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
     int broken = 0;
     str_pool_t **str_pool = init_str_pool(1024);
     while ((read = getline(&line, &len, fp)) != -1) {
-        if (cancel == 1) {
-            toggle_grep_cancel(0);
+        if (is_cancel_requested()) {
             broken = 1;
             break;
         }
@@ -101,21 +68,22 @@ static size_t start_grep(const char *list_cmd, const char *cmd, int seq) {
 static void grep_task(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     start_grep(search_data->list_cmd, "grep", search_data->seq_);
+    job_done();
 }
 
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
+    job_started();
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
     search_data->seq_ = seq;
     strcpy(search_data->cmd, cmd);
     strcpy(search_data->list_cmd, list_cmd);
     req->data = search_data;
-    toggle_grep_init(1);
     int ret = uv_queue_work(loop, req, grep_task, after_grep_task);
     if (ret != 0) {
-        toggle_grep_init(0);
         free(search_data);
         free(req);
+        job_done();
         return -1;
     }
     return 0;

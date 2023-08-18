@@ -13,26 +13,6 @@
 static file_info_t *g_f_cache;
 static size_t g_f_cache_len;
 static str_pool_t **g_str_pool;
-static uv_mutex_t file_init_mutex;
-static int file_init = 0;
-
-static void toggle_file_init(int val) {
-    uv_mutex_lock(&file_init_mutex);
-    file_init = val;
-    uv_mutex_unlock(&file_init_mutex);
-}
-
-int is_file_search_ongoing(void) {
-    return file_init;
-}
-
-void init_file_mutex(void) {
-    uv_mutex_init(&file_init_mutex);
-}
-
-void deinit_file_mutex(void) {
-    uv_mutex_destroy(&file_init_mutex);
-}
 
 void free_file_info(file_info_t **f) {
     free(*f);
@@ -132,11 +112,11 @@ static void fuzzy_file_search(uv_work_t *req) {
     } else {
         start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
-    toggle_file_init(0);
+    job_done();
 }
 
 int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd, int seq) {
-    toggle_file_init(1);
+    job_started();
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
     strcpy(search_data->value, value);
@@ -151,6 +131,7 @@ int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char
     if (ret != 0) {
         free(search_data);
         free(req);
+        job_done();
         return -1;
     }
     return 0;

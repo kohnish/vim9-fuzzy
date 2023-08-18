@@ -20,9 +20,6 @@ typedef struct search_data_t {
 } search_data_t;
 
 size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len, int seq);
-void toggle_cancel(int val);
-void init_cancel_mutex(void);
-void deinit_cancel_mutex(void);
 
 #ifdef __cplusplus
 }
