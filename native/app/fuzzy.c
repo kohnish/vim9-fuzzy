@@ -329,6 +329,23 @@ static void sanitize_word(const char *word, char *buf) {
     }
 }
 
+static uv_mutex_t cancel_mutex;
+static int cancel = 0;
+
+void init_cancel_mutex(void) {
+    uv_mutex_init(&cancel_mutex);
+}
+
+void deinit_cancel_mutex(void) {
+    uv_mutex_destroy(&cancel_mutex);
+}
+
+void toggle_cancel(int val) {
+    uv_mutex_lock(&cancel_mutex);
+    cancel = val;
+    uv_mutex_unlock(&cancel_mutex);
+}
+
 size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_info_t *files, size_t len, int seq) {
     size_t matched_len = 0;
     static char word[MAX_VIM_INPUT];
@@ -340,7 +357,8 @@ size_t start_fuzzy_response(const char *search_keyword, const char *cmd, file_in
     sanitize_word(search_keyword, word);
 
     for (size_t i = 0; i < len; i++) {
-        if (is_cancel_requested()) {
+        if (cancel == 1) {
+            toggle_cancel(0);
             return matched_len;
         }
         size_t file_len = strlen(files[i].file_name);

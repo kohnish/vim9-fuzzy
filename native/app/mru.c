@@ -16,6 +16,26 @@ static file_info_t *g_mru_cache;
 static size_t g_mru_len;
 static str_pool_t **g_str_pool;
 
+static uv_mutex_t mru_init_mutex;
+static int mru_init = 0;
+
+static void toggle_mru_init(int val) {
+    uv_mutex_lock(&mru_init_mutex);
+    mru_init = val;
+    uv_mutex_unlock(&mru_init_mutex);
+}
+
+int is_mru_search_ongoing(void) {
+    return mru_init;
+}
+
+void init_mru_mutex(void) {
+    uv_mutex_init(&mru_init_mutex);
+}
+
+void deinit_mru_mutex(void) {
+    uv_mutex_destroy(&mru_init_mutex);
+}
 
 static size_t load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, FILE *fp) {
     static size_t current_size = INITIAL_CACHE_SIZE;
@@ -162,11 +182,11 @@ static void fuzzy_mru_search(uv_work_t *req) {
     } else {
         start_fuzzy_response(search_data->value, "mru", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
-    job_done();
+    toggle_mru_init(0);
 }
 
 int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path, int seq) {
-    job_started();
+    toggle_mru_init(1);
     uv_work_t *req = malloc(sizeof(uv_work_t));
     search_data_t *search_data = malloc(sizeof(search_data_t));
     strcpy(search_data->value, value);
@@ -180,7 +200,6 @@ int queue_mru_search(uv_loop_t *loop, const char *value, const char *mru_path, i
     if (ret != 0) {
         free(search_data);
         free(req);
-        job_done();
         return -1;
     }
     return 0;

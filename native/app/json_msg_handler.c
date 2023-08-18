@@ -14,34 +14,6 @@
 #include "grep.h"
 #endif
 
-
-static int cancel = 0;
-static int job = 0;
-
-int is_cancel_requested(void) {
-    return cancel;
-}
-
-static int is_job_ongoing(void) {
-    return job;
-}
-
-static void request_cancel(void) {
-    cancel = 1;
-}
-
-static void reset_cancel(void) {
-    cancel = 0;
-}
-
-void job_started(void) {
-    job = 0;
-}
-
-void job_done(void) {
-    job = 0;
-}
-
 #define MAX_JSON_TOKENS 128
 #define MAX_JSON_ELM_SIZE PATH_MAX
 #define MAX_RESPONSE_SIZE (MAX_RESPONSE_LINES * PATH_MAX)
@@ -117,12 +89,6 @@ static int json_eq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 void handle_json_msg(uv_loop_t *loop, const char *json_str) {
-    request_cancel();
-    while (is_job_ongoing()) {
-        usleep(1000);
-    }
-    reset_cancel();
-
     jsmn_parser j_parser;
     jsmn_init(&j_parser);
     jsmntok_t j_tokens[MAX_JSON_TOKENS];
@@ -137,6 +103,23 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     if (ret == 0) {
         return;
     }
+
+
+// ToDo: Add grep support to windows 
+#ifndef _WIN32
+    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
+        toggle_cancel(1);
+        toggle_grep_cancel(1);
+        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1 || is_grep_search_ongoing() == 1) {
+#else
+    if (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+        toggle_cancel(1);
+        while (is_file_search_ongoing() == 1 || is_mru_search_ongoing() == 1) {
+#endif
+            usleep(1000);
+        }
+    }
+
     // easy parsing. No depth guarantee.
     for (int i = 0; i < MAX_JSON_TOKENS; i++) {
         if (json_eq(json_str, &j_tokens[i], "cmd") == 0) {
@@ -182,3 +165,25 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     }
 }
 
+void init_handlers(void) {
+    init_file_mutex();
+    init_mru_mutex();
+    init_cancel_mutex();
+#ifndef _WIN32
+    init_yank_mutex();
+    init_grep_mutex();
+#endif
+}
+
+void deinit_handlers(void) {
+    deinit_file();
+    deinit_mru();
+    deinit_file_mutex();
+    deinit_mru_mutex();
+    deinit_cancel_mutex();
+#ifndef _WIN32
+    deinit_yank();
+    deinit_yank_mutex();
+    deinit_grep_mutex();
+#endif
+}

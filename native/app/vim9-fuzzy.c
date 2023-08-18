@@ -70,6 +70,7 @@ int main(void) {
     static uv_signal_t sig_handle;
 
     uv_loop_init(&loop);
+    init_handlers();
 
     uv_tty_init(&loop, &tty_handle, STDIN_FILENO, 1);
     uv_read_start((uv_stream_t *)&tty_handle, alloc_buffer, read_stdin);
@@ -78,6 +79,7 @@ int main(void) {
     uv_signal_start(&sig_handle, on_signal, SIGINT);
 
     uv_run(&loop, UV_RUN_DEFAULT);
+    deinit_handlers();
 
     return 0;
 }
