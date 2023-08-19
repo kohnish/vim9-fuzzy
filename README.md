@@ -131,10 +131,30 @@ enddef
 
 g:Vim9_fuzzy_list_func = (root_dir, target_dir) => ListFiles(root_dir, target_dir)
 
-# Override grep command
+def IsInGitDir(dir: string): bool
+    var is_in_git_dir = trim(system(g_git_cmd .. " -C " .. dir .. " rev-parse --is-inside-work-tree 2>/dev/null"))
+    var in_git_dir = v:shell_error == 0
+    var is_in_ignore_dir = trim(system(g_git_cmd .. " check-ignore " .. dir .. " 2>/dev/null"))
+    var in_ignore_dir = v:shell_error == 0
+    return in_git_dir && !in_ignore_dir
+enddef
+
+var g_last_git_dir = ""
+def WasInGitDir(dir: string): bool
+    if dir == g_last_git_dir
+        return true
+    endif
+    if IsInGitDir(dir)
+        g_last_git_dir = dir
+        return true
+    endif
+    return false
+enddef
+
+# Override grep command, make sure the function is not blocking, unlike list command, it's called on every input
 def GrepCmd(keyword: string, root_dir: string, target_dir: string): dict<any>
     var dir = TargetDir(root_dir, target_dir)
-    if IsInGitDir(dir)
+    if WasInGitDir(dir)
         return {
             "trim_target_dir": true,
             "cmd": "cd " .. dir .. " && " .. g_git_cmd .. " grep -n " .. keyword
