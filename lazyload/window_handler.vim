@@ -16,6 +16,7 @@ const g_yank_preview_height = get(g:, 'vim9_fuzzy_yank_preview_height', g_one_th
 const g_global_mru_enabled = get(g:, 'vim9_fuzzy_enable_global_mru', false)
 const g_yank_path = get(g:, "vim9_fuzzy_yank_path", g_script_dir .. "/../yank")
 const g_mru_path = get(g:, "vim9_fuzzy_mru_path", g_script_dir .. "/../mru")
+const g_was_swap = &swapfile
 
 const g_select_keymap = {
     "edit": get(g:, 'vim9_fuzzy_edit_key', "\<CR>"),
@@ -167,7 +168,7 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
         endif
     endif
     var orig_bufs = tabpagebuflist(tabpagenr())
-    var pedit_exec = "noautocmd silent topleft pedit "
+    var pedit_exec = "noswap noautocmd silent topleft pedit "
     # pedit goes wrong on modified buffer
     try
         if filereadable(line)
@@ -286,6 +287,9 @@ def ConfigureWindow(ctx: dict<any>): void
 enddef
 
 def CloseWindow(ctx: dict<any>): void
+    if g_was_swap
+        set swapfile
+    endif
     try
         clearmatches(ctx.buf_id)
     catch
