@@ -13,6 +13,7 @@ void toggle_grep_cancel(int val);
 int is_grep_search_ongoing(void);
 void init_grep_mutex(void);
 void deinit_grep_mutex(void);
+char **cmd_to_str_arr(const char *cmdline, str_pool_t ***str_pool, size_t *result_len);
 
 #ifdef __cplusplus
 }

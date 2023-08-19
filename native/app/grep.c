@@ -71,6 +71,24 @@ static void grep_task(uv_work_t *req) {
     job_done();
 }
 
+char **cmd_to_str_arr(const char *cmdline, str_pool_t ***str_pool, size_t *result_len) {
+    char **arr = malloc(sizeof(char *) * 32);
+    size_t word_num = 0;
+    size_t word_begin_pos = 0;
+    const char *cmdline_ptr = cmdline;
+    for (size_t i = 0; i < strlen(cmdline); i++) {
+        if (*cmdline_ptr == ' ' || *cmdline == '\0') {
+            arr[word_num] = pool_str_with_len(str_pool, &cmdline[word_begin_pos], i - word_begin_pos);
+            word_num++;
+            word_begin_pos = i + 1;
+        }
+        cmdline_ptr++;
+    }
+    arr[word_num] = pool_str(str_pool, &cmdline[word_begin_pos]);
+    *result_len = word_num;
+    return arr;
+}
+
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
     job_started();
     uv_work_t *req = malloc(sizeof(uv_work_t));
