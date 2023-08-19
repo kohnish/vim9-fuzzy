@@ -9,6 +9,10 @@
 #define MAX_RESPONSE_LINES 100
 #define MAX_CMD 32
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*res_cb_t)(void *userdata);
 
 typedef struct response_t {
@@ -26,4 +30,7 @@ int is_cancel_requested(void);
 void job_started(void);
 void job_done(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* JSON_MSG_HANDLER_H */

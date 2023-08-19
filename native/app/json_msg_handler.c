@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <uv.h>
+#include "timer.h"
 #ifndef _WIN32
 #include "yank.h"
 #include "grep.h"
@@ -27,6 +28,9 @@ static int is_job_ongoing(void) {
 }
 
 static void request_cancel(void) {
+#ifndef _WIN32
+    cancel_grep();
+#endif
     cancel = 1;
 }
 
@@ -116,13 +120,27 @@ static int json_eq(const char *json, jsmntok_t *tok, const char *s) {
     return -1;
 }
 
-void handle_json_msg(uv_loop_t *loop, const char *json_str) {
-    request_cancel();
-    while (is_job_ongoing()) {
-        usleep(1000);
-    }
-    reset_cancel();
+typedef struct handle_json_msg_arg_T {
+    uv_loop_t *loop;
+    char json_msg[MAX_VIM_INPUT];
+} handle_json_msg_arg_T;
 
+static void handle_json_msg_again_cb(void *data) {
+    // fprintf(stderr, "again\n");
+    handle_json_msg_arg_T *timer_arg = (handle_json_msg_arg_T *)data;
+    reset_cancel();
+    handle_json_msg(timer_arg->loop, timer_arg->json_msg);
+    free(timer_arg);
+}
+
+static int job_ongoing_cb(void *data) {
+    (void)data;
+    // request_cancel();
+    return is_job_ongoing() == 0;
+}
+
+static int current_seq = 0;
+void handle_json_msg(uv_loop_t *loop, const char *json_str) {
     jsmn_parser j_parser;
     jsmn_init(&j_parser);
     jsmntok_t j_tokens[MAX_JSON_TOKENS];
@@ -161,6 +179,27 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
             seq = atoi(int_str);
         }
     }
+
+    if (seq >= current_seq) {
+        current_seq = seq;
+        // fprintf(stderr, "not skip seq %i %s\n", seq, list_cmd);
+    } else {
+        // fprintf(stderr, "skip seq %i %s\n", seq, list_cmd);
+        return;
+    }
+    // fprintf(stderr, "seq %i\n", seq);
+    if (is_job_ongoing()) {
+        // fprintf(stderr, "timer seq %i %s\n", seq, list_cmd);
+        request_cancel();
+        handle_json_msg_arg_T *timer_arg = calloc(1, sizeof(handle_json_msg_arg_T));
+        strcpy(timer_arg->json_msg, json_str);
+        timer_arg->loop = loop;
+        timer_cond_schedule(loop, job_ongoing_cb, handle_json_msg_again_cb, NULL, timer_arg, 10);
+        return;
+    }
+
+
+
 
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {

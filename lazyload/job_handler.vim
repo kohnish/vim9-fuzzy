@@ -4,10 +4,15 @@ import "./window_handler.vim"
 
 const g_default_executable_path = fnamemodify(resolve(expand('<script>:p')), ':h') .. "/../bin/vim9-fuzzy"
 
+def PrintError(channel: channel, msg: string): void
+    echom msg
+enddef
+
 export def StartFinderProcess(): dict<any>
     var job_opt = {
         "out_mode": "lsp",
         "in_mode": "lsp",
+        "err_cb": PrintError,
         "noblock": 1,
     }
     var executable = ""

@@ -326,6 +326,9 @@ def SendCharMsg(ctx: dict<any>, msg: string): void
     ctx.current_line = msg
     var cmd = ctx.mode
     if cmd == "grep"
+        if len(msg) == 0
+            return
+        endif
         ctx.list_cmd = GetGrepCmdStr(msg, ctx.root_dir, ctx.target_dir)
         var msg2send = {"cmd": cmd, "root_dir": ctx.root_dir, "list_cmd": ctx.list_cmd["cmd"], "value": msg, "mru_path": g_mru_path, "yank_path": g_yank_path}
         job_handler.WriteToChannel(ctx.channel, msg2send, ctx, PrintResult)

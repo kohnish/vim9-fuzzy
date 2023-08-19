@@ -7,6 +7,7 @@ set(src
     fuzzy.c
     mru.c
     str_pool.c
+    timer.c
     )
 
 if(NOT WIN32)
