@@ -16,7 +16,6 @@ static file_info_t *g_mru_cache;
 static size_t g_mru_len;
 static str_pool_t **g_str_pool;
 
-
 static size_t load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_info, size_t *result_len, FILE *fp) {
     static size_t current_size = INITIAL_CACHE_SIZE;
     if (*file_info == NULL) {

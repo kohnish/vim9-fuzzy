@@ -3,7 +3,6 @@
 
 #include <uv.h>
 
-
 typedef int (*cond_cb_T)(void *data);
 typedef void (*timer_cb_T)(void *data);
 

@@ -1,8 +1,6 @@
-#include <uv.h>
+#include "timer.h"
 #include <stdlib.h>
-
-typedef int (*cond_cb_T)(void *data);
-typedef void (*timer_cb_T)(void *data);
+#include <uv.h>
 
 typedef struct timer_container_T {
     cond_cb_T cond_cb;
@@ -11,7 +9,7 @@ typedef struct timer_container_T {
     void *timer_arg;
 } timer_container_T;
 
-void timer_cb_internal(uv_timer_t *handle) {
+static void timer_cb_internal(uv_timer_t *handle) {
     timer_container_T *container = (timer_container_T *)handle->data;
     if (container->cond_cb(container->cond_arg)) {
         container->timer_cb(container->timer_arg);
@@ -25,7 +23,7 @@ void timer_cb_internal(uv_timer_t *handle) {
 
 void timer_cond_schedule(uv_loop_t *loop, cond_cb_T cond_cb, timer_cb_T timer_cb, void *cond_arg, void *timer_arg, uint64_t timeout) {
     uv_timer_t *handle = (uv_timer_t *)malloc(sizeof(uv_timer_t));
-    timer_container_T *container = (timer_container_T*)malloc(sizeof(timer_container_T));
+    timer_container_T *container = (timer_container_T *)malloc(sizeof(timer_container_T));
     container->cond_cb = cond_cb;
     container->timer_cb = timer_cb;
     container->cond_arg = cond_arg;

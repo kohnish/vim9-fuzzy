@@ -44,26 +44,7 @@ static void handle_grep_out(proc_ctx_T *ctx, char *lines, size_t sz) {
     }
 }
 
-char **cmd_to_str_arr(const char *cmdline, str_pool_t ***str_pool) {
-    // ToDo: realloc later
-    char **arr = malloc(sizeof(char *) * 32);
-    size_t word_num = 0;
-    size_t word_begin_pos = 0;
-    const char *cmdline_ptr = cmdline;
-    for (size_t i = 0; i < strlen(cmdline); i++) {
-        if (*cmdline_ptr == ' ' || *cmdline == '\0') {
-            arr[word_num] = pool_str_with_len(str_pool, &cmdline[word_begin_pos], i - word_begin_pos - 1);
-            word_num++;
-            word_begin_pos = i + 1;
-        }
-        cmdline_ptr++;
-    }
-    arr[word_num] = pool_str(str_pool, &cmdline[word_begin_pos]);
-    arr[word_num + 1] = NULL;
-    return arr;
-}
-
-void on_close(uv_handle_t *handle) {
+static void on_close(uv_handle_t *handle) {
     free(handle);
 }
 
@@ -86,7 +67,7 @@ static void on_proc_exit(uv_process_t *req, int64_t exit_status, int term_signal
     job_done();
 }
 
-void alloc_buffer(uv_handle_t *handle, size_t len, uv_buf_t *buf) {
+static void alloc_buffer(uv_handle_t *handle, size_t len, uv_buf_t *buf) {
     (void)handle;
     (void)len;
     // fprintf(stderr, "len %zu\n", len);
@@ -97,7 +78,7 @@ void alloc_buffer(uv_handle_t *handle, size_t len, uv_buf_t *buf) {
     // buf->len = len;
 }
 
-void read_pipe(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+static void read_pipe(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     proc_ctx_T *ctx = stream->data;
     // printf("WIP: handle event\n");
     if (nread > 0) {
@@ -114,7 +95,7 @@ void read_pipe(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 void cancel_grep(void) {
     if (g_child_req != NULL) {
         // fprintf(stderr, "pid %i\n", uv_process_get_pid(g_child_req));
-        
+
         uv_kill(uv_process_get_pid(g_child_req), SIGINT);
         char buf[PATH_MAX] = {0};
         sprintf(buf, "kill -2 `pgrep -P %i` 2>/dev/null", uv_process_get_pid(g_child_req));
@@ -143,7 +124,7 @@ int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) 
     args[1] = "-c";
     args[2] = (char *)list_cmd;
     args[3] = NULL;
-    
+
     // char **args = cmd_to_str_arr(list_cmd, &str_pool);
     options.file = args[0];
     options.args = args;

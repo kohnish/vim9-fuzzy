@@ -2,6 +2,7 @@
 #include "fuzzy.h"
 #include "mru.h"
 #include "search_helper.h"
+#include "timer.h"
 #include <jsmn.h>
 #include <limits.h>
 #include <stdio.h>
@@ -9,12 +10,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <uv.h>
-#include "timer.h"
 #ifndef _WIN32
-#include "yank.h"
 #include "grep.h"
+#include "yank.h"
 #endif
-
 
 static int cancel = 0;
 static int job = 0;
@@ -198,9 +197,6 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
         return;
     }
 
-
-
-
     // No safety here as well, vimscript must set it correctly
     if (strcmp(cmd, "init_file") == 0 || strcmp(cmd, "file") == 0 || strcmp(cmd, "init_path") == 0 || strcmp(cmd, "path") == 0) {
         queue_search(loop, cmd, value, list_cmd, seq);
@@ -220,4 +216,3 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
 #endif
     }
 }
-
