@@ -116,11 +116,11 @@ void cancel_grep(void) {
         // fprintf(stderr, "pid %i\n", uv_process_get_pid(g_child_req));
         
         uv_kill(uv_process_get_pid(g_child_req), SIGINT);
-        // char buf[PATH_MAX] = {0};
-        // sprintf(buf, "kill `pgrep -P %i`", uv_process_get_pid(g_child_req));
+        char buf[PATH_MAX] = {0};
+        sprintf(buf, "kill -2 `pgrep -P %i` 2>/dev/null", uv_process_get_pid(g_child_req));
         // sprintf(buf, "kill %i", uv_process_get_pid(g_child_req));
         // sprintf(buf, "kill -9 %i", uv_process_get_pid(g_child_req));
-        // system(buf);
+        system(buf);
         // job_done();
         // uv_process_kill(g_child_req, SIGINT);
     }
