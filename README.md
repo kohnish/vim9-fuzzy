@@ -98,40 +98,25 @@ if len(git_root) > 0
 endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
-# To set root of search path on every vim9-fuzzy window is opened in case vim current dir changes.
+
+# Overriding list and grep by setting callbacks
+
+# Helper functions
 def GetProjRoot(base_dir: string): string
-    var root_dir = trim(system(exepath("git") .. " -C " .. base_dir .. " rev-parse --show-toplevel 2>/dev/null"))
+    var root_dir = trim(system(g_git_cmd .. " -C " .. base_dir .. " rev-parse --show-toplevel 2>/dev/null"))
     if empty(root_dir)
         root_dir = getcwd()
     endif
     return root_dir
 enddef
-g:Vim9_fuzzy_get_proj_root_func = () => GetProjRoot(getcwd())
 
-# Override list command string
-def ListFiles(root_dir: string, target_dir: string): dict<any>
-    var git_exe = exepath("git")
+def TargetDir(root_dir: string, target_dir: string): string
     var dir = target_dir
     if dir == ""
         dir = root_dir
     endif
-    var is_in_git_dir = trim(system(git_exe .. " -C " .. dir .. " rev-parse --is-inside-work-tree 2>/dev/null"))
-    var in_git_dir = v:shell_error == 0
-    var is_in_ignore_dir = trim(system("git check-ignore " .. dir .. " 2>/dev/null"))
-    var in_ignore_dir = v:shell_error == 0
-    if in_git_dir && !in_ignore_dir
-        return {
-            "trim_target_dir": true,
-            "cmd": git_exe .. " -C " .. dir .. " ls-files | egrep -v '^.*(\.png|\.jpg)$' && " .. git_exe .. " clean --dry-run -d | awk '{print $3}'"
-        }
-    endif
-    return {
-        "trim_target_dir": false,
-        "cmd": "find " .. dir .. " -type f -maxdepth 3"
-    }
+    return dir
 enddef
-
-g:Vim9_fuzzy_list_func = (root_dir, target_dir) => ListFiles(root_dir, target_dir)
 
 def IsInGitDir(dir: string): bool
     var is_in_git_dir = trim(system(g_git_cmd .. " -C " .. dir .. " rev-parse --is-inside-work-tree 2>/dev/null"))
@@ -153,22 +138,44 @@ def WasInGitDir(dir: string): bool
     return false
 enddef
 
-# Override grep command, make sure the function is not blocking, unlike list command, it's called on every input
+def ListCmd(root_dir: string, target_dir: string): dict<any>
+    var ignore_suffix = "flac|mp4|webm|png|jpg|jpeg|gz|zip|7z|xz|pdf|apk|dmg|pkg|apk|exe"
+    var dir = TargetDir(root_dir, target_dir)
+    if WasInGitDir(dir)
+        return {
+            "trim_target_dir": true,
+            "cmd": "cd " .. dir .. " && rg --files | rg -v -e '^.*\.(" .. ignore_suffix .. ")$'"
+        }
+    endif
+    return {
+        "trim_target_dir": false,
+        "cmd": "rg --files ---max-depth 3 " .. dir .. " | rg -v -e '^.*\.(" .. ignore_suffix .. ")$'"
+    }
+enddef
+
 def GrepCmd(keyword: string, root_dir: string, target_dir: string): dict<any>
     var dir = TargetDir(root_dir, target_dir)
     if WasInGitDir(dir)
         return {
             "trim_target_dir": true,
-            "cmd": "cd " .. dir .. " && " .. g_git_cmd .. " grep -n " .. keyword
+            "cmd": g_git_cmd .. " -C " .. dir .. " grep -n '" .. keyword .. "'"
         }
     endif
     return {
         "trim_target_dir": false,
-        "cmd":  "rg --color=never -Hn --no-heading " .. keyword .. " ."
+        "cmd":  "rg --max-depth=2 --max-filesize 1M --color=never -Hn --no-heading '" .. keyword .. "' " .. dir
     }
 enddef
 
+# Override proj root find func
+g:Vim9_fuzzy_get_proj_root_func = () => GetProjRoot(getcwd())
+
+# Override list command string
+g:Vim9_fuzzy_list_func = (root_dir, target_dir) => ListCmd(root_dir, target_dir)
+
+# Override grep command, make sure the function is not blocking, unlike list command, it's called on every input
 g:Vim9_fuzzy_grep_func = (keyword, root_dir, target_dir) => GrepCmd(keyword, root_dir, target_dir)
+
 ```
 
 Build requirements
