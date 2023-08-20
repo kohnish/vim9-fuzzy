@@ -46,7 +46,7 @@ def DefaultGetGrepCmdStr(keyword: string, root_dir: string, target_dir: string):
     if target_dir == ""
         return {
             "trim_target_dir": true,
-            "cmd": "cd " .. root_dir .. " && " .. rg_cmd .. " --color=never -Hn --no-heading '" .. keyword .. "' ."
+            "cmd": "cd " .. root_dir .. " && " .. rg_cmd .. " --color=never -Hn --no-heading '" .. keyword .. "'"
         }
     endif
     return {
@@ -174,7 +174,7 @@ def OpenPreviewForCurrentLineTask(ctx: dict<any>): void
         if filereadable(line)
             execute pedit_exec .. fnameescape(line)
         else
-            execute pedit_exec  .. g_script_dir .. "/NULL"
+            execute pedit_exec  .. g_script_dir .. "/Vim9-fuzzy"
         endif
     catch
     endtry
