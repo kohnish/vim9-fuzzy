@@ -21,7 +21,7 @@ win-download:
 
 macos-download:
 	mkdir -p bin
-	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.7fuzzy-osx-x86-64 -o bin/vim9-fuzzy
+	curl -L https://github.com/kohnish/vim9-fuzzy/releases/download/v1.7/fuzzy-osx-x86-64 -o bin/vim9-fuzzy
 	chmod +x bin/vim9-fuzzy
 
 clean:
