@@ -12,6 +12,7 @@ export def StartFinderProcess(): dict<any>
     var job_opt = {
         "out_mode": "lsp",
         "in_mode": "lsp",
+        "env": { "UV_THREADPOOL_SIZE": 1 },
         "err_cb": PrintError,
         "noblock": 1,
     }
