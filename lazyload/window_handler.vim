@@ -210,6 +210,14 @@ def CountCharUntil(line: string, char: string): number
 enddef
 
 def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
+    # whenever tilda is include vim functions crash
+    var has_tilda = false
+    for c in ctx.current_line
+        if c == '~'
+            has_tilda = true
+            break
+        endif
+    endfor
     if !bufloaded(ctx.buf_id)
         return
     endif
@@ -240,12 +248,14 @@ def PrintResult(ctx: dict<any>, json_msg: dict<any>): void
             line_counter += 1
         endfor
         # ToDo: stop matching with the filename part
-        if ctx.mode == "grep"
+        if ctx.mode == "grep" && !has_tilda
             matchadd("matched_str_colour", ctx.current_line)
         endif
         setbufline(buf_id, 1, lines)
     endif
-    OpenPreviewForCurrentLine(ctx)
+    if !has_tilda
+        OpenPreviewForCurrentLine(ctx)
+    endif
     redraw
 enddef
 
