@@ -58,7 +58,7 @@ noremap <C-k> :Vim9FuzzyPwdFile<CR>
 # Exact match grep (default to rg, not so fast, just use vim grep for big projects)
 noremap <C-g> :Vim9FuzzyGrep<CR>
 # Or limit the directory of the current file
-noremap <C-i> :Vim9FuzzyPwdGrep<CR>
+noremap <C-l> :Vim9FuzzyPwdGrep<CR>
 
 # Enable MRU for all opened files (default is only for files opened via vim9fuzzy window)
 g:vim9_fuzzy_enable_global_mru = true
