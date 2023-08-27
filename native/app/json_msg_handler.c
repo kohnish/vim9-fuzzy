@@ -125,7 +125,6 @@ typedef struct handle_json_msg_arg_T {
 } handle_json_msg_arg_T;
 
 static void handle_json_msg_again_cb(void *data) {
-    // fprintf(stderr, "again\n");
     handle_json_msg_arg_T *timer_arg = (handle_json_msg_arg_T *)data;
     reset_cancel();
     handle_json_msg(timer_arg->loop, timer_arg->json_msg);
@@ -134,7 +133,6 @@ static void handle_json_msg_again_cb(void *data) {
 
 static int job_ongoing_cb(void *data) {
     (void)data;
-    // request_cancel();
     return is_job_ongoing() == 0;
 }
 
@@ -181,14 +179,11 @@ void handle_json_msg(uv_loop_t *loop, const char *json_str) {
 
     if (seq >= current_seq) {
         current_seq = seq;
-        // fprintf(stderr, "not skip seq %i %s\n", seq, list_cmd);
     } else {
-        // fprintf(stderr, "skip seq %i %s\n", seq, list_cmd);
         return;
     }
-    // fprintf(stderr, "seq %i\n", seq);
+
     if (is_job_ongoing()) {
-        // fprintf(stderr, "timer seq %i %s\n", seq, list_cmd);
         request_cancel();
         handle_json_msg_arg_T *timer_arg = calloc(1, sizeof(handle_json_msg_arg_T));
         strcpy(timer_arg->json_msg, json_str);

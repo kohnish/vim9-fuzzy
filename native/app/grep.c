@@ -15,7 +15,6 @@ static uv_process_t *g_child_req = NULL;
 static void handle_grep_out(proc_ctx_T *ctx, char *lines, size_t sz) {
     // ToDo: do this task in non-main thread
     if (is_cancel_requested()) {
-        // fprintf(stderr, "read cancelled\n");
         return;
     }
     (void)sz;
@@ -51,13 +50,9 @@ static void on_close(uv_handle_t *handle) {
 static void on_proc_exit(uv_process_t *req, int64_t exit_status, int term_signal) {
     (void)exit_status;
     (void)term_signal;
-    // fprintf(stderr, "WIP: proc exit %llu %i\n", exit_status, term_signal);
     proc_ctx_T *ctx = (proc_ctx_T *)req->data;
-    // fprintf(stderr, "on exit size %zu\n", ctx->file_res_size);
     if (term_signal != SIGINT) {
         send_res_from_file_info("grep", ctx->file_res, ctx->file_res_size, ctx->seq);
-    } else {
-        // fprintf(stderr, "sig int\n");
     }
     uv_close((uv_handle_t *)req, on_close);
     free(ctx->file_res);
@@ -70,47 +65,31 @@ static void on_proc_exit(uv_process_t *req, int64_t exit_status, int term_signal
 static void alloc_buffer(uv_handle_t *handle, size_t len, uv_buf_t *buf) {
     (void)handle;
     (void)len;
-    // fprintf(stderr, "len %zu\n", len);
     static char buf_base[MAX_VIM_INPUT];
     memset(buf_base, 0, MAX_VIM_INPUT);
     *buf = uv_buf_init(buf_base, MAX_VIM_INPUT);
-    // buf->base = (char *)malloc(len);
-    // buf->len = len;
 }
 
 static void read_pipe(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     proc_ctx_T *ctx = stream->data;
-    // printf("WIP: handle event\n");
     if (nread > 0) {
-        // fprintf(stderr, "suggested read size %zu\n", nread);
         handle_grep_out(ctx, buf->base, buf->len);
-        // send_res_from_file_info("grep", ctx->file_res, ctx->file_res_size, ctx->seq);
     }
-    // fprintf(stderr, "on read size %zu\n", ctx->file_res_size);
-    // if (buf->base) {
-    //     free(buf->base);
-    // }
 }
 
 void cancel_grep(void) {
     if (g_child_req != NULL) {
-        // fprintf(stderr, "pid %i\n", uv_process_get_pid(g_child_req));
-
         uv_kill(uv_process_get_pid(g_child_req), SIGINT);
         char buf[PATH_MAX] = {0};
+        // uv_kill doesn't seem to work sometimes
         sprintf(buf, "kill -2 `pgrep -P %i` 2>/dev/null", uv_process_get_pid(g_child_req));
-        // sprintf(buf, "kill %i", uv_process_get_pid(g_child_req));
-        // sprintf(buf, "kill -9 %i", uv_process_get_pid(g_child_req));
         system(buf);
-        // job_done();
-        // uv_process_kill(g_child_req, SIGINT);
     }
 }
 
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
     job_started();
     (void)cmd;
-    // fprintf(stderr, "list_cmd %s\n", list_cmd);
     assert(g_child_req == NULL);
     g_child_req = (uv_process_t *)calloc(1, sizeof(uv_process_t));
     static uv_process_options_t options;
@@ -150,7 +129,6 @@ int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) 
     g_child_req->data = ctx;
     pipe.data = ctx;
     int r;
-    // fprintf(stderr, "uv_spawning  %s\n", list_cmd);
     if ((r = uv_spawn(loop, g_child_req, &options))) {
         fprintf(stderr, "uv_spawn %s\n", uv_strerror(r));
         deinit_str_pool(str_pool);

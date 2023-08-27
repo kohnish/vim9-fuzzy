@@ -18,7 +18,7 @@ ToDo
 Runtime requirements
 --------------------
  - Vim with vim9script support
- - Rg (Only for the default list command, can be overridden by Vim9_fuzzy_user_list_func)
+ - Rg (Can be overridden by git grep and etc)
 
 Usage
 -----
@@ -56,9 +56,9 @@ noremap <C-e> :Vim9FuzzyMru<CR>
 # Search in the directory of the current dir
 noremap <C-k> :Vim9FuzzyPwdFile<CR>
 # Exact match grep (default to rg, not so fast, just use vim grep for big projects)
-noremap <C-a> :Vim9FuzzyGrep<CR>
+noremap <C-g> :Vim9FuzzyGrep<CR>
 # Or limit the directory of the current file
-noremap <C-g> :Vim9FuzzyPwdGrep<CR>
+noremap <C-i> :Vim9FuzzyPwdGrep<CR>
 
 # Enable MRU for all opened files (default is only for files opened via vim9fuzzy window)
 g:vim9_fuzzy_enable_global_mru = true
@@ -98,9 +98,7 @@ if len(git_root) > 0
 endif
 g:vim9_fuzzy_proj_dir = proj_dir
 
-
 # Overriding list and grep by setting callbacks
-
 # Helper functions
 def GetProjRoot(base_dir: string): string
     var root_dir = trim(system(g_git_cmd .. " -C " .. base_dir .. " rev-parse --show-toplevel 2>/dev/null"))
