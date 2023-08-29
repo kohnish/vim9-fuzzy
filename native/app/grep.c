@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <uv.h>
 
-static uv_process_t g_child_req;
+static uv_process_t *g_child_req = NULL;
 
 static void handle_grep_out(proc_ctx_T *ctx, char *lines, size_t sz) {
     // ToDo: do this task in non-main thread
@@ -57,7 +57,8 @@ static void on_proc_exit(uv_process_t *req, int64_t exit_status, int term_signal
     uv_close((uv_handle_t *)req, on_close);
     free(ctx->file_res);
     deinit_str_pool(ctx->str_pool);
-    g_child_req.pid = 0;
+    free(ctx);
+    g_child_req = NULL;
     job_done();
 }
 
@@ -77,11 +78,11 @@ static void read_pipe(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 }
 
 void cancel_grep(void) {
-    if (g_child_req.pid != 0) {
-        uv_kill(uv_process_get_pid(&g_child_req), SIGINT);
+    if (g_child_req != NULL) {
+        uv_kill(uv_process_get_pid(g_child_req), SIGINT);
         char buf[PATH_MAX] = {0};
         // uv_kill doesn't seem to work sometimes
-        sprintf(buf, "kill -2 `pgrep -P %i` 2>/dev/null", uv_process_get_pid(&g_child_req));
+        sprintf(buf, "kill -2 `pgrep -P %i` 2>/dev/null", uv_process_get_pid(g_child_req));
         system(buf);
     }
 }
@@ -89,9 +90,8 @@ void cancel_grep(void) {
 int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) {
     job_started();
     (void)cmd;
-
-    assert(g_child_req.pid == 0);
-
+    assert(g_child_req == NULL);
+    g_child_req = (uv_process_t *)calloc(1, sizeof(uv_process_t));
     static uv_process_options_t options;
     static uv_pipe_t pipe;
 
@@ -119,27 +119,30 @@ int queue_grep(uv_loop_t *loop, const char *cmd, const char *list_cmd, int seq) 
     child_stdio[1].data.stream = (uv_stream_t *)&pipe;
     options.stdio = child_stdio;
 
-    static proc_ctx_T ctx;
-    ctx.seq = seq;
-    ctx.str_pool = str_pool;
-    ctx.file_res = (file_info_t *)malloc(sizeof(file_info_t) * 100);
-    ctx.file_res_size = 0;
-    ctx.file_res_buf_size = 100;
+    proc_ctx_T *ctx = (proc_ctx_T *)calloc(1, sizeof(proc_ctx_T));
+    ctx->seq = seq;
+    ctx->str_pool = str_pool;
+    ctx->file_res = (file_info_t *)malloc(sizeof(file_info_t) * 100);
+    ctx->file_res_size = 0;
+    ctx->file_res_buf_size = 100;
 
-    g_child_req.data = &ctx;
-    pipe.data = &ctx;
+    g_child_req->data = ctx;
+    pipe.data = ctx;
     int r;
-    if ((r = uv_spawn(loop, &g_child_req, &options))) {
+    if ((r = uv_spawn(loop, g_child_req, &options))) {
         fprintf(stderr, "uv_spawn %s\n", uv_strerror(r));
         deinit_str_pool(str_pool);
-        free(ctx.file_res);
-        g_child_req.pid = 0;
+        free(ctx->file_res);
+        free(g_child_req);
+        free(ctx);
+        g_child_req = NULL;
         // job_done();
         return r;
     }
     r = uv_read_start((uv_stream_t *)&pipe, alloc_buffer, read_pipe);
     if (r) {
-        g_child_req.pid = 0;
+        // job_done();
+        g_child_req = NULL;
         fprintf(stderr, "uv_read_start %s\n", uv_strerror(r));
     }
     return r;
