@@ -111,6 +111,7 @@ static void after_fuzzy_yank_search(uv_work_t *req, int status) {
     search_data_t *search_data = (search_data_t *)req->data;
     free(search_data);
     free(req);
+    job_done();
 }
 
 static void fuzzy_yank_search(uv_work_t *req) {
@@ -120,7 +121,6 @@ static void fuzzy_yank_search(uv_work_t *req) {
     } else {
         start_fuzzy_response(search_data->value, "yank", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
-    job_done();
 }
 
 int queue_yank_search(uv_loop_t *loop, const char *value, const char *yank_path, int seq) {

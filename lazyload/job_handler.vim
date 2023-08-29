@@ -29,6 +29,14 @@ export def StartFinderProcess(): dict<any>
     return { "job": job, "channel": job_getchannel(job) }
 enddef
 
+def SendWhenOnline(msg_kind: string, ch: channel, msg: dict<any>, opt: dict<any>): void
+    if ch_status(ch) == "open"
+        ch_sendexpr(ch, msg, opt)
+    else
+        g_flush_timers[msg_kind] = timer_start(100, (_) => SendWhenOnline(msg_kind, ch, msg, opt))
+    endif
+enddef
+
 var g_flush_timers = {}
 export def WriteToChannel(ch: channel, msg: dict<any>, ctx: dict<any>, Cb: func): void
     var opt = {
@@ -39,5 +47,5 @@ export def WriteToChannel(ch: channel, msg: dict<any>, ctx: dict<any>, Cb: func)
     if !empty(timer_info(timer))
         timer_stop(timer)
     endif
-    g_flush_timers[msg_kind] = timer_start(100, (_) => ch_sendexpr(ch, msg, opt))
+    g_flush_timers[msg_kind] = timer_start(100, (_) => SendWhenOnline(msg_kind, ch, msg, opt))
 enddef

@@ -103,16 +103,17 @@ static void after_fuzzy_file_search(uv_work_t *req, int status) {
     search_data_t *search_data = (search_data_t *)req->data;
     free(search_data);
     free(req);
+    job_done();
 }
 
 static void fuzzy_file_search(uv_work_t *req) {
     search_data_t *search_data = (search_data_t *)req->data;
     if (strlen(search_data->value) == 0) {
+        // has to be blocking...
         init_file(search_data->cmd, search_data->list_cmd, search_data->seq_);
     } else {
         start_fuzzy_response(search_data->value, "file", search_data->file_info, search_data->file_info_len, search_data->seq_);
     }
-    job_done();
 }
 
 int queue_search(uv_loop_t *loop, const char *cmd, const char *value, const char *list_cmd, int seq) {
