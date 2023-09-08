@@ -49,7 +49,7 @@ static size_t load_mru_to_file_info(str_pool_t ***str_pool, file_info_t **file_i
             memset(val_buf, 0, PATH_MAX);
             val_counter = 0;
             line_counter++;
-        } else if (c == EOF) {
+        } else if (c == '\0') {
             break;
         } else {
             if (current_mode == 0) {
