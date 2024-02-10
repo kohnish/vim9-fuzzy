@@ -12,7 +12,6 @@ if(${USE_LOCAL_JSMN})
 else()
     ExternalProject_Add(libjsmn
         URL https://github.com/zserge/jsmn/archive/refs/tags/v1.1.0.tar.gz
-        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/cache/libjsmn
         CONFIGURE_COMMAND echo [INFO] No Configure
         BUILD_COMMAND echo [INFO] No Build
         INSTALL_COMMAND mkdir -p ${PROJECT_BINARY_DIR}/include && cp jsmn.h ${PROJECT_BINARY_DIR}/include/jsmn.h
