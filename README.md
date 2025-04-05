@@ -1,7 +1,7 @@
 Vim9-fuzzy
 =========
 
-Yet another fuzzy search plugin for vim with vim9script support.
+Vim9 fuzzy is yet another fuzzy search plugin for vim with vim9script support.
 Fuzzy matching for files, mru, yanked texts are supported.
 No vim language binding dependencies, use job-start API to avoid blocking vim
 
